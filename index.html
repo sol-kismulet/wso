@@ -34,6 +34,15 @@
       margin-bottom: 1.5rem;
     }
 
+    h2 {
+      font-size: 1.2rem;
+      font-weight: 400;
+      color: #999;
+      margin: 2rem 0 0.75rem;
+      text-transform: lowercase;
+      letter-spacing: 0.05em;
+    }
+
     ul {
       list-style: none;
       padding: 0;
@@ -56,47 +65,19 @@
       color: #d8d8ff;
       border-color: rgba(216, 216, 255, 0.4);
     }
-
-    .empty {
-      color: #666;
-      font-size: 1.2rem;
-      margin-top: 1rem;
-    }
   </style>
 </head>
 <body>
   <main>
     <h1>wayzata symphony orchestra</h1>
     <p class="subtitle">practice pages</p>
-    <ul id="song-list"></ul>
+
+    <h2>transformations — may 8, 2026</h2>
+    <ul>
+      <li><a href="coleman-umoja.html">valerie coleman — umoja</a></li>
+      <li><a href="brahms-haydn-variations.html">brahms — variations on a theme of haydn</a></li>
+      <li><a href="mahler-symphony-2.html">mahler — symphony no. 2, 1st movement</a></li>
+    </ul>
   </main>
-
-  <script>
-    fetch('songs.json')
-      .then(r => r.json())
-      .then(songs => {
-        const list = document.getElementById('song-list');
-        const entries = Object.entries(songs).sort((a, b) =>
-          a[1].title.localeCompare(b[1].title)
-        );
-
-        if (entries.length === 0) {
-          const p = document.createElement('p');
-          p.className = 'empty';
-          p.textContent = 'songs coming soon';
-          list.parentNode.appendChild(p);
-          return;
-        }
-
-        entries.forEach(([slug, song]) => {
-          const li = document.createElement('li');
-          const a = document.createElement('a');
-          a.href = 'song.html?s=' + encodeURIComponent(slug);
-          a.textContent = song.title;
-          li.appendChild(a);
-          list.appendChild(li);
-        });
-      });
-  </script>
 </body>
 </html>

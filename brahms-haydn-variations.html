@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>brahms — variations on a theme of haydn</title>
+  <link rel="stylesheet" href="song.css">
+  <style>
+    #video-wrapper {
+      width: min(560px, 90vw);
+      aspect-ratio: 16 / 9;
+      background: #111;
+    }
+    #video-wrapper iframe {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div class="title">
+    <span>brahms — variations on a theme of haydn</span>
+    <img src="feather.svg" alt="feather" class="feather">
+  </div>
+
+  <div id="video-wrapper">
+    <div id="player"></div>
+  </div>
+
+  <div class="controls">
+    <div id="loops">
+      <div class="loop">
+        <label>start <input class="start" type="text" value="0:00" size="5"></label>
+        <label>end <input class="end" type="text" value="1:00" size="5"></label>
+      </div>
+      <div class="loop">
+        <label>start <input class="start" type="text" value="1:00" size="5"></label>
+        <label>end <input class="end" type="text" value="2:00" size="5"></label>
+      </div>
+      <div class="loop">
+        <label>start <input class="start" type="text" value="2:00" size="5"></label>
+        <label>end <input class="end" type="text" value="3:00" size="5"></label>
+      </div>
+      <div class="loop">
+        <label>start <input class="start" type="text" value="3:00" size="5"></label>
+        <label>end <input class="end" type="text" value="4:00" size="5"></label>
+      </div>
+    </div>
+    <div>
+      <button id="add-loop">+</button>
+    </div>
+    <div>
+      <label style="margin-right:0.5rem;">speed <span id="speed-display">1x</span></label>
+      <input id="speed" type="range" min="0.25" max="2" step="0.25" value="1">
+    </div>
+    <div>
+      <button id="play-btn">play piece</button>
+    </div>
+  </div>
+
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script>
+    let player;
+    let loopActive = false;
+    let playActive = false;
+    let loopInterval = null;
+    let currentLoopIndex = null;
+
+    const loopsContainer = document.getElementById('loops');
+    const addLoopBtn = document.getElementById('add-loop');
+    const playBtn = document.getElementById('play-btn');
+    const speedInput = document.getElementById('speed');
+    const speedDisplay = document.getElementById('speed-display');
+
+    function parseTime(t) {
+      const parts = t.split(':');
+      if (parts.length === 1) return parseFloat(parts[0]) || 0;
+      return parseInt(parts[0], 10) * 60 + parseFloat(parts[1]);
+    }
+
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60);
+      const s = Math.floor(sec % 60).toString().padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
+    let loops = [];
+
+    function setupLoops() {
+      loops = Array.from(loopsContainer.querySelectorAll('.loop')).map((el, i) => {
+        const start = el.querySelector('.start');
+        const end = el.querySelector('.end');
+        let btn = el.querySelector('.loop-btn');
+        if (!btn) {
+          btn = document.createElement('button');
+          btn.textContent = 'loop section';
+          btn.className = 'loop-btn';
+          while (el.lastChild && el.lastChild.nodeType === Node.TEXT_NODE) {
+            el.removeChild(el.lastChild);
+          }
+          el.appendChild(btn);
+        }
+        btn.dataset.index = i;
+        btn.addEventListener('click', () => handleLoopButton(i));
+        return { start, end, button: btn };
+      });
+    }
+
+    function stopLoop() {
+      if (loopInterval) {
+        clearInterval(loopInterval);
+        loopInterval = null;
+      }
+      if (currentLoopIndex !== null) {
+        loops[currentLoopIndex].button.textContent = 'loop section';
+      }
+      if (player && loopActive) {
+        player.pauseVideo();
+      }
+      loopActive = false;
+      currentLoopIndex = null;
+    }
+
+    function startLoop(i) {
+      playActive = false;
+      playBtn.textContent = 'play piece';
+      player.pauseVideo();
+      currentLoopIndex = i;
+      const start = parseTime(loops[i].start.value);
+      player.seekTo(start, true);
+      player.playVideo();
+      loopInterval = setInterval(() => {
+        const e = parseTime(loops[i].end.value);
+        if (player.getCurrentTime() >= e) {
+          player.seekTo(parseTime(loops[i].start.value), true);
+        }
+      }, 50);
+      loops[i].button.textContent = 'stop';
+      loopActive = true;
+    }
+
+    function handleLoopButton(i) {
+      if (loopActive && currentLoopIndex === i) {
+        stopLoop();
+      } else {
+        stopLoop();
+        startLoop(i);
+      }
+    }
+
+    addLoopBtn.addEventListener('click', () => {
+      const last = loops[loops.length - 1];
+      const startVal = last.end.value;
+      const startSec = parseTime(startVal);
+      const endSec = startSec + 10;
+
+      const loopDiv = document.createElement('div');
+      loopDiv.className = 'loop';
+
+      const startLabel = document.createElement('label');
+      startLabel.textContent = 'start ';
+      const startInput = document.createElement('input');
+      startInput.type = 'text';
+      startInput.size = 5;
+      startInput.className = 'start';
+      startInput.value = startVal;
+      startLabel.appendChild(startInput);
+
+      const endLabel = document.createElement('label');
+      endLabel.textContent = 'end ';
+      const endInput = document.createElement('input');
+      endInput.type = 'text';
+      endInput.size = 5;
+      endInput.className = 'end';
+      endInput.value = formatTime(endSec);
+      endLabel.appendChild(endInput);
+
+      const loopButton = document.createElement('button');
+      loopButton.textContent = 'loop section';
+      loopButton.className = 'loop-btn';
+
+      loopDiv.appendChild(startLabel);
+      loopDiv.appendChild(endLabel);
+      loopDiv.appendChild(loopButton);
+      loopsContainer.appendChild(loopDiv);
+      const index = loops.length;
+      loopButton.dataset.index = index;
+      loopButton.addEventListener('click', () => handleLoopButton(index));
+      loops.push({ start: startInput, end: endInput, button: loopButton });
+    });
+
+    playBtn.addEventListener('click', () => {
+      if (!playActive) {
+        stopLoop();
+        player.seekTo(0, true);
+        player.playVideo();
+        playBtn.textContent = 'stop';
+        playActive = true;
+      } else {
+        player.pauseVideo();
+        playBtn.textContent = 'play piece';
+        playActive = false;
+      }
+    });
+
+    speedInput.addEventListener('input', () => {
+      const r = parseFloat(speedInput.value);
+      player.setPlaybackRate(r);
+      speedDisplay.textContent = r.toFixed(2) + 'x';
+    });
+
+    function onYouTubeIframeAPIReady() {
+      player = new YT.Player('player', {
+        width: '100%',
+        height: '100%',
+        videoId: 'uMbOFc9xIyo',
+        playerVars: {
+          origin: window.location.origin,
+          rel: 0
+        },
+        events: {
+          onReady: () => {
+            setupLoops();
+          }
+        }
+      });
+    }
+    window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
+  </script>
+</body>
+</html>
