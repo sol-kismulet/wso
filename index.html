@@ -44,9 +44,7 @@
       background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
     }
 
-    .feather-wrap {
-      position: relative;
-      display: inline-block;
+    .feather-icon {
       width: 2.5rem;
       height: 2.5rem;
       margin-top: 1.2rem;
@@ -55,53 +53,23 @@
       animation: featherIn 3s cubic-bezier(0.22, 1, 0.36, 1) 0.6s forwards;
     }
 
-    .feather-icon {
-      width: 100%;
-      height: 100%;
-      display: block;
-      transition: filter 1.5s ease;
+    .feather-icon.glow {
+      animation: featherIn 3s cubic-bezier(0.22, 1, 0.36, 1) 0.6s forwards,
+                 goldenGlow 2s ease forwards;
     }
 
-    .feather-icon.red {
-      filter: brightness(0.4) sepia(1) hue-rotate(-10deg) saturate(10);
-    }
-
-    /* golden shimmer that sweeps bottom-left to top-right */
-    .feather-shimmer {
-      position: absolute;
-      inset: -30%;
-      background: linear-gradient(
-        135deg,
-        transparent 0%,
-        transparent 35%,
-        rgba(255, 215, 100, 0.9) 45%,
-        rgba(255, 240, 180, 1) 50%,
-        rgba(255, 215, 100, 0.9) 55%,
-        transparent 65%,
-        transparent 100%
-      );
-      transform: translateX(-120%) translateY(120%);
-      pointer-events: none;
-      opacity: 0;
-      mix-blend-mode: screen;
-    }
-
-    .feather-shimmer.active {
-      opacity: 1;
-      animation: shimmerSweep 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-    }
-
-    @keyframes shimmerSweep {
+    @keyframes goldenGlow {
       0% {
-        transform: translateX(-120%) translateY(120%);
-        opacity: 1;
+        filter: none;
       }
-      70% {
-        opacity: 1;
+      25% {
+        filter: brightness(1.8) drop-shadow(0 0 6px rgba(255, 210, 80, 0.9)) drop-shadow(0 0 20px rgba(255, 190, 50, 0.5));
+      }
+      50% {
+        filter: brightness(1.2) sepia(0.6) hue-rotate(5deg) saturate(3) drop-shadow(0 0 10px rgba(255, 180, 40, 0.6));
       }
       100% {
-        transform: translateX(120%) translateY(-120%);
-        opacity: 0;
+        filter: brightness(0.4) sepia(1) hue-rotate(-10deg) saturate(10);
       }
     }
 
@@ -283,10 +251,7 @@
   <header>
     <h1>wayzata symphony orchestra</h1>
     <p class="subtitle">practice pages</p>
-    <div class="feather-wrap">
-      <img src="feather.svg" alt="" class="feather-icon">
-      <div class="feather-shimmer"></div>
-    </div>
+    <img src="feather.svg" alt="" class="feather-icon">
   </header>
 
   <main id="concerts"></main>
@@ -295,13 +260,8 @@
 
   <script>
     setTimeout(() => {
-      const shimmer = document.querySelector('.feather-shimmer');
-      const feather = document.querySelector('.feather-icon');
-      if (shimmer) shimmer.classList.add('active');
-      // turn red halfway through the shimmer sweep
-      setTimeout(() => {
-        if (feather) feather.classList.add('red');
-      }, 500);
+      const f = document.querySelector('.feather-icon');
+      if (f) f.classList.add('glow');
     }, 20000);
   </script>
 
