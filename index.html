@@ -51,6 +51,11 @@
       transform: translateY(-20rem) rotate(-15deg);
       animation: featherIn 3s cubic-bezier(0.22, 1, 0.36, 1) 0.6s forwards;
       margin-top: 1.2rem;
+      transition: filter 2s ease;
+    }
+
+    .feather-icon.red {
+      filter: brightness(0.4) sepia(1) hue-rotate(-10deg) saturate(10);
     }
 
     @keyframes featherIn {
@@ -237,6 +242,13 @@
   <main id="concerts"></main>
 
   <footer>wso</footer>
+
+  <script>
+    setTimeout(() => {
+      const f = document.querySelector('.feather-icon');
+      if (f) f.classList.add('red');
+    }, 20000);
+  </script>
 
   <script>
     fetch('songs.json')
