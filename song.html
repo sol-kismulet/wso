@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>loading…</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="song.css">
   <style>
     #video-wrapper {
@@ -61,154 +64,148 @@
 
     if (!slug) {
       document.getElementById('song-title').textContent = 'no song specified';
+    } else {
+      init(slug);
     }
 
-    let player;
-    let loopActive = false;
-    let playActive = false;
-    let loopInterval = null;
-    let currentLoopIndex = null;
-    let loops = [];
+    function init(slug) {
+      let player;
+      let playerReady = false;
+      let loopActive = false;
+      let playActive = false;
+      let currentLoopIndex = null;
+      let loops = [];
 
-    const loopsContainer = document.getElementById('loops');
-    const addLoopBtn = document.getElementById('add-loop');
-    const playBtn = document.getElementById('play-btn');
-    const speedInput = document.getElementById('speed');
-    const speedDisplay = document.getElementById('speed-display');
+      const loopsContainer = document.getElementById('loops');
+      const addLoopBtn = document.getElementById('add-loop');
+      const playBtn = document.getElementById('play-btn');
+      const speedInput = document.getElementById('speed');
+      const speedDisplay = document.getElementById('speed-display');
 
-    function parseTime(t) {
-      const parts = t.split(':');
-      if (parts.length === 1) return parseFloat(parts[0]) || 0;
-      return parseInt(parts[0], 10) * 60 + parseFloat(parts[1]);
-    }
+      function parseTime(t) {
+        const parts = t.split(':');
+        if (parts.length === 1) return parseFloat(parts[0]) || 0;
+        return parseInt(parts[0], 10) * 60 + parseFloat(parts[1]);
+      }
 
-    function formatTime(sec) {
-      const m = Math.floor(sec / 60);
-      const s = Math.floor(sec % 60).toString().padStart(2, '0');
-      return `${m}:${s}`;
-    }
+      function formatTime(sec) {
+        const m = Math.floor(sec / 60);
+        const s = Math.floor(sec % 60).toString().padStart(2, '0');
+        return `${m}:${s}`;
+      }
 
-    function setupLoops() {
-      loops = Array.from(loopsContainer.querySelectorAll('.loop')).map((el, i) => {
-        const start = el.querySelector('.start');
-        const end = el.querySelector('.end');
+      function createLoopElement(startVal, endVal) {
+        const div = document.createElement('div');
+        div.className = 'loop';
+
+        const startLabel = document.createElement('label');
+        startLabel.textContent = 'start ';
+        const startInput = document.createElement('input');
+        startInput.type = 'text';
+        startInput.size = 5;
+        startInput.className = 'start';
+        startInput.value = startVal;
+        startLabel.appendChild(startInput);
+
+        const endLabel = document.createElement('label');
+        endLabel.textContent = 'end ';
+        const endInput = document.createElement('input');
+        endInput.type = 'text';
+        endInput.size = 5;
+        endInput.className = 'end';
+        endInput.value = endVal;
+        endLabel.appendChild(endInput);
+
         const btn = document.createElement('button');
         btn.textContent = 'loop section';
         btn.className = 'loop-btn';
-        btn.addEventListener('click', () => handleLoopButton(i));
-        el.appendChild(btn);
-        return { start, end, button: btn };
-      });
-    }
+        const index = loops.length;
+        btn.addEventListener('click', () => handleLoopButton(index));
 
-    function stopLoop() {
-      if (loopInterval) {
-        clearInterval(loopInterval);
-        loopInterval = null;
-      }
-      if (currentLoopIndex !== null) {
-        loops[currentLoopIndex].button.textContent = 'loop section';
-      }
-      if (player && loopActive) {
-        player.pauseVideo();
-      }
-      loopActive = false;
-      currentLoopIndex = null;
-    }
+        div.appendChild(startLabel);
+        div.appendChild(endLabel);
+        div.appendChild(btn);
+        loopsContainer.appendChild(div);
 
-    function startLoop(i) {
-      playActive = false;
-      playBtn.textContent = 'play piece';
-      player.pauseVideo();
-      currentLoopIndex = i;
-      const start = parseTime(loops[i].start.value);
-      player.seekTo(start, true);
-      player.playVideo();
-      loopInterval = setInterval(() => {
-        const e = parseTime(loops[i].end.value);
-        if (player.getCurrentTime() >= e) {
-          player.seekTo(parseTime(loops[i].start.value), true);
+        loops.push({ start: startInput, end: endInput, button: btn });
+      }
+
+      function stopLoop() {
+        if (currentLoopIndex !== null) {
+          loops[currentLoopIndex].button.textContent = 'loop section';
         }
-      }, 50);
-      loops[i].button.textContent = 'stop';
-      loopActive = true;
-    }
-
-    function handleLoopButton(i) {
-      if (loopActive && currentLoopIndex === i) {
-        stopLoop();
-      } else {
-        stopLoop();
-        startLoop(i);
+        if (player && loopActive) {
+          player.pauseVideo();
+        }
+        loopActive = false;
+        currentLoopIndex = null;
       }
-    }
 
-    addLoopBtn.addEventListener('click', () => {
-      const last = loops[loops.length - 1];
-      const startVal = last.end.value;
-      const startSec = parseTime(startVal);
-      const endSec = startSec + 10;
-
-      const loopDiv = document.createElement('div');
-      loopDiv.className = 'loop';
-
-      const startLabel = document.createElement('label');
-      startLabel.textContent = 'start ';
-      const startInput = document.createElement('input');
-      startInput.type = 'text';
-      startInput.size = 5;
-      startInput.className = 'start';
-      startInput.value = startVal;
-      startLabel.appendChild(startInput);
-
-      const endLabel = document.createElement('label');
-      endLabel.textContent = 'end ';
-      const endInput = document.createElement('input');
-      endInput.type = 'text';
-      endInput.size = 5;
-      endInput.className = 'end';
-      endInput.value = formatTime(endSec);
-      endLabel.appendChild(endInput);
-
-      const loopButton = document.createElement('button');
-      loopButton.textContent = 'loop section';
-      loopButton.className = 'loop-btn';
-
-      loopDiv.appendChild(startLabel);
-      loopDiv.appendChild(endLabel);
-      loopDiv.appendChild(loopButton);
-      loopsContainer.appendChild(loopDiv);
-      const index = loops.length;
-      loopButton.addEventListener('click', () => handleLoopButton(index));
-      loops.push({ start: startInput, end: endInput, button: loopButton });
-    });
-
-    playBtn.addEventListener('click', () => {
-      if (!playActive) {
-        stopLoop();
-        player.seekTo(0, true);
-        player.playVideo();
-        playBtn.textContent = 'stop';
-        playActive = true;
-      } else {
-        player.pauseVideo();
-        playBtn.textContent = 'play piece';
+      function startLoop(i) {
+        if (!playerReady) return;
         playActive = false;
+        playBtn.textContent = 'play piece';
+        player.pauseVideo();
+        currentLoopIndex = i;
+        const start = parseTime(loops[i].start.value);
+        player.seekTo(start, true);
+        player.playVideo();
+        loops[i].button.textContent = 'stop';
+        loopActive = true;
       }
-    });
 
-    speedInput.addEventListener('input', () => {
-      const r = parseFloat(speedInput.value);
-      player.setPlaybackRate(r);
-      speedDisplay.textContent = r.toFixed(2) + 'x';
-    });
+      function checkLoop() {
+        if (!loopActive || currentLoopIndex === null) return;
+        const end = parseTime(loops[currentLoopIndex].end.value);
+        if (player.getCurrentTime() >= end) {
+          player.seekTo(parseTime(loops[currentLoopIndex].start.value), true);
+        }
+      }
 
-    // Load song data and initialize
-    if (slug) {
+      function handleLoopButton(i) {
+        if (loopActive && currentLoopIndex === i) {
+          stopLoop();
+        } else {
+          stopLoop();
+          startLoop(i);
+        }
+      }
+
+      addLoopBtn.addEventListener('click', () => {
+        if (loops.length === 0) return;
+        const last = loops[loops.length - 1];
+        const startVal = last.end.value;
+        const startSec = parseTime(startVal);
+        createLoopElement(startVal, formatTime(startSec + 10));
+      });
+
+      playBtn.addEventListener('click', () => {
+        if (!playerReady) return;
+        if (!playActive) {
+          stopLoop();
+          player.seekTo(0, true);
+          player.playVideo();
+          playBtn.textContent = 'stop';
+          playActive = true;
+        } else {
+          player.pauseVideo();
+          playBtn.textContent = 'play piece';
+          playActive = false;
+        }
+      });
+
+      speedInput.addEventListener('input', () => {
+        if (!playerReady) return;
+        const r = parseFloat(speedInput.value);
+        player.setPlaybackRate(r);
+        speedDisplay.textContent = r.toFixed(2) + 'x';
+      });
+
+      // Load song data and initialize
       fetch('songs.json')
         .then(r => r.json())
-        .then(songs => {
-          const song = songs[slug];
+        .then(data => {
+          const song = (data.songs || {})[slug];
           if (!song) {
             document.getElementById('song-title').textContent = 'song not found';
             return;
@@ -218,32 +215,7 @@
           document.getElementById('song-title').textContent = song.title;
 
           // Build loop elements from JSON
-          song.loops.forEach(([start, end]) => {
-            const div = document.createElement('div');
-            div.className = 'loop';
-
-            const startLabel = document.createElement('label');
-            startLabel.textContent = 'start ';
-            const startInput = document.createElement('input');
-            startInput.type = 'text';
-            startInput.size = 5;
-            startInput.className = 'start';
-            startInput.value = start;
-            startLabel.appendChild(startInput);
-
-            const endLabel = document.createElement('label');
-            endLabel.textContent = 'end ';
-            const endInput = document.createElement('input');
-            endInput.type = 'text';
-            endInput.size = 5;
-            endInput.className = 'end';
-            endInput.value = end;
-            endLabel.appendChild(endInput);
-
-            div.appendChild(startLabel);
-            div.appendChild(endLabel);
-            loopsContainer.appendChild(div);
-          });
+          song.loops.forEach(([start, end]) => createLoopElement(start, end));
 
           // Initialize YouTube player
           window.onYouTubeIframeAPIReady = function () {
@@ -257,11 +229,21 @@
               },
               events: {
                 onReady: () => {
-                  setupLoops();
+                  playerReady = true;
+                  // Use timeupdate polling via onStateChange instead of setInterval
+                },
+                onStateChange: (event) => {
+                  if (event.data === YT.PlayerState.PLAYING) {
+                    loopTimer = setInterval(checkLoop, 200);
+                  } else {
+                    clearInterval(loopTimer);
+                  }
                 }
               }
             });
           };
+
+          let loopTimer = null;
 
           // If the API already loaded before our callback was set
           if (window.YT && window.YT.Player) {

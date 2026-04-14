@@ -70,19 +70,6 @@ input[type="range"] {
   width: 10em;
 }
 
-.footer-note {
-  font-size: 1rem;
-  text-align: center;
-  margin-top: auto;
-  margin-bottom: 0.5rem;
-  color: #ccc;
-}
-
-.lyrics {
-  font-size: 1rem;
-  text-align: center;
-  white-space: pre-wrap;
-}
 
 a {
   color: #9cd8ff;
