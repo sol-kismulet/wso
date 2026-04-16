@@ -29,7 +29,8 @@
       { "start": "13:56", "end": "14:10", "label": "measures 1-5" },
       { "start": "14:10", "end": "14:25", "label": "pickup to measure 6 – first half of measure 10" },
       { "start": "14:25", "end": "14:36", "label": "second half of measure 10 – first half of measure 14" },
-      { "start": "14:35", "end": "15:08", "label": "second half of measure 14 – first half of measure 25" }
+      { "start": "14:35", "end": "15:08", "label": "second half of measure 14 – first half of measure 25" },
+      { "start": "15:08", "end": "15:30", "label": "second half of measure 25 – measure 32" }
     ]
   }
 }
