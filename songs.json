@@ -27,7 +27,7 @@
     "concert": "transformations",
     "loops": [
       { "start": "13:56", "end": "14:10", "label": "measures 1-5" },
-      ["14:10", "14:25"],
+      { "start": "14:10", "end": "14:25", "label": "pickup to measure 6 – first half of measure 10" },
       ["14:25", "14:36"],
       ["14:36", "15:00"]
     ]
