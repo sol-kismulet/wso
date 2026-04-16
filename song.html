@@ -26,6 +26,14 @@
     .back:hover {
       color: #d8d8ff;
     }
+    .loop-label {
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.45);
+      letter-spacing: 0.08em;
+      font-style: italic;
+      margin: 0.6rem 0 0.2rem;
+      text-align: left;
+    }
   </style>
 </head>
 <body>
@@ -218,7 +226,19 @@
           document.getElementById('song-title').textContent = song.title;
 
           // Build loop elements from JSON
-          song.loops.forEach(([start, end]) => {
+          song.loops.forEach((loop) => {
+            // Support both ["start", "end"] and { start, end, label } formats
+            const start = Array.isArray(loop) ? loop[0] : loop.start;
+            const end = Array.isArray(loop) ? loop[1] : loop.end;
+            const label = Array.isArray(loop) ? null : loop.label;
+
+            if (label) {
+              const labelDiv = document.createElement('div');
+              labelDiv.className = 'loop-label';
+              labelDiv.textContent = label;
+              loopsContainer.appendChild(labelDiv);
+            }
+
             const div = document.createElement('div');
             div.className = 'loop';
 

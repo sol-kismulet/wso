@@ -26,7 +26,7 @@
     "videoId": "Cwe8Irtw2sc",
     "concert": "transformations",
     "loops": [
-      ["13:56", "14:10"],
+      { "start": "13:56", "end": "14:10", "label": "measures 1-5" },
       ["14:10", "14:25"],
       ["14:25", "14:36"],
       ["14:36", "15:00"]
