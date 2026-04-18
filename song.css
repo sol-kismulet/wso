@@ -44,6 +44,13 @@ body {
   text-align: center;
 }
 
+.loop-label {
+  width: 100%;
+  font-size: 0.9rem;
+  color: rgba(255,255,255,0.5);
+  font-style: italic;
+}
+
 .loop .loop-btn {
   font-size: 1rem;
   padding: 0.4em 0.8em;
