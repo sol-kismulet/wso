@@ -45,7 +45,7 @@
 
   <div class="title">
     <span id="song-title">loading…</span>
-    <img src="feather.svg" alt="feather" class="feather">
+    <img src="feather.svg" alt="" class="feather">
   </div>
 
   <div id="video-wrapper">
@@ -58,7 +58,7 @@
       <button id="add-loop">+</button>
     </div>
     <div>
-      <label class="speed-label">speed <span id="speed-display">1x</span></label>
+      <label class="speed-label">speed <span id="speed-display">1.00x</span></label>
       <input id="speed" type="range" min="0.25" max="2" step="0.25" value="1">
     </div>
     <div>
@@ -170,10 +170,14 @@
 
       function checkLoop() {
         if (!loopActive || currentLoopIndex === null) return;
-        const end = parseTime(loops[currentLoopIndex].end.value);
-        if (player.getCurrentTime() >= end) {
-          player.seekTo(parseTime(loops[currentLoopIndex].start.value), true);
-        }
+        try {
+          const start = parseTime(loops[currentLoopIndex].start.value);
+          const end = parseTime(loops[currentLoopIndex].end.value);
+          if (end <= start) return;
+          if (player.getCurrentTime() >= end) {
+            player.seekTo(start, true);
+          }
+        } catch (e) {}
       }
 
       function handleLoopButton(i) {
@@ -217,7 +221,10 @@
 
       // Load song data and initialize
       fetch('songs.json')
-        .then(r => r.json())
+        .then(r => {
+          if (!r.ok) throw new Error(r.status);
+          return r.json();
+        })
         .then(data => {
           const song = (data.songs || {})[slug];
           if (!song) {
@@ -229,7 +236,7 @@
           document.getElementById('song-title').textContent = song.title;
 
           // Build loop elements from JSON
-          song.loops.forEach((loop) => {
+          (song.loops || []).forEach((loop) => {
             const start = Array.isArray(loop) ? loop[0] : loop.start;
             const end = Array.isArray(loop) ? loop[1] : loop.end;
             const label = Array.isArray(loop) ? null : loop.label;
@@ -252,9 +259,18 @@
                 },
                 onStateChange: (event) => {
                   clearInterval(loopTimer);
-                  if (event.data === YT.PlayerState.PLAYING) {
+                  if (event.data === YT.PlayerState.PLAYING && loopActive) {
                     loopTimer = setInterval(checkLoop, 200);
+                  } else if (event.data === YT.PlayerState.ENDED) {
+                    playActive = false;
+                    playBtn.textContent = 'play piece';
                   }
+                },
+                onError: () => {
+                  playerReady = false;
+                  stopLoop();
+                  playActive = false;
+                  playBtn.textContent = 'play piece';
                 }
               }
             });
