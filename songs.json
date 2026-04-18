@@ -21,8 +21,7 @@
       "loops": [
         { "start": "0:24", "end": "2:13", "label": "mm. 0–29, Andante" },
         { "start": "2:13", "end": "3:38", "label": "Var. I, poco più animato" },
-        ["2:13", "3:00"],
-        ["3:00", "4:00"]
+        { "start": "3:38", "end": "4:37", "label": "Var. II, più vivace" },
       ]
     },
     "mahler-symphony-2": {
