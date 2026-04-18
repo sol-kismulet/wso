@@ -102,6 +102,13 @@
           section.appendChild(ul);
           container.appendChild(section);
         }
+      })
+      .catch(() => {
+        const container = document.getElementById('concerts');
+        const p = document.createElement('p');
+        p.className = 'empty';
+        p.textContent = 'failed to load songs';
+        container.appendChild(p);
       });
   </script>
 </body>
