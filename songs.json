@@ -19,9 +19,10 @@
       "videoId": "QmQLb5SZb4E",
       "concert": "transformations",
       "loops": [
-        { "start": "0:24", "end": "2:13", "label": "mm. 0–29, Andante" },
-        { "start": "2:13", "end": "3:38", "label": "Var. I, poco più animato" },
-        { "start": "3:38", "end": "4:37", "label": "Var. II, più vivace" }
+        { "start": "0:24", "end": "2:13", "label": "Andante, mm. 0–29" },
+        { "start": "2:13", "end": "3:38", "label": "Var. I, poco più animato, mm. 30–58" },
+        { "start": "3:38", "end": "4:37", "label": "Var. II, più vivace, mm. 59–87" },
+        { "start": "4:37", "end": "6:17", "label": "Var. III, con moto, mm. 88–145" }
       ]
     },
     "mahler-symphony-2": {
