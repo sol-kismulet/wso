@@ -104,15 +104,15 @@
       }
 
       function createLoopElement(startVal, endVal, label) {
-        const div = document.createElement('div');
-        div.className = 'loop';
-
         if (label) {
           const labelDiv = document.createElement('div');
           labelDiv.className = 'loop-label';
           labelDiv.textContent = label;
-          div.appendChild(labelDiv);
+          loopsContainer.appendChild(labelDiv);
         }
+
+        const div = document.createElement('div');
+        div.className = 'loop';
 
         const startLabel = document.createElement('label');
         startLabel.textContent = 'start ';

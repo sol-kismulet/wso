@@ -30,6 +30,10 @@ body {
   width: min(560px, 90vw);
 }
 
+#loops {
+  width: 100%;
+}
+
 .loop {
   display: flex;
   flex-wrap: wrap;
@@ -37,6 +41,7 @@ body {
   gap: 0.4rem;
   justify-content: center;
   margin-bottom: 0.5rem;
+  width: 100%;
 }
 
 .loop input[type="text"] {
