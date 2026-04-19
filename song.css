@@ -52,6 +52,8 @@ body {
 .loop .loop-btn {
   font-size: 1rem;
   padding: 0.4em 0.8em;
+  min-width: 8em;
+  text-align: center;
 }
 
 label {
