@@ -188,6 +188,9 @@
     // Visual event queue: [{time, layer, index}]
     let beatQueue = [];
 
+    // Track scheduled source nodes so we can cancel them on tempo change
+    let scheduledSources = [];
+
     const SCHEDULE_AHEAD = 0.12;
 
     const startBtn = document.getElementById('start-btn');
@@ -263,6 +266,26 @@
       src.buffer = buffers[key];
       src.connect(dest);
       src.start(time);
+      scheduledSources.push(src);
+      src.onended = () => {
+        const i = scheduledSources.indexOf(src);
+        if (i >= 0) scheduledSources.splice(i, 1);
+      };
+    }
+
+    function cancelScheduledBeats() {
+      scheduledSources.forEach(s => { try { s.stop(); } catch (e) {} });
+      scheduledSources = [];
+      beatQueue = [];
+    }
+
+    function resyncMeasure() {
+      cancelScheduledBeats();
+      const startTime = audioCtx.currentTime + 0.05;
+      nextBeat4Time = startTime;
+      nextBeat3Time = startTime;
+      currentBeat4 = 0;
+      currentBeat3 = 0;
     }
 
     function buildLayerConfig(containerId, labelClass, defaultKey, onSelect, onMute) {
@@ -407,8 +430,12 @@
     });
 
     bpmSlider.addEventListener('input', () => {
+      bpmDisplay.textContent = parseInt(bpmSlider.value, 10);
+    });
+
+    bpmSlider.addEventListener('change', () => {
       bpm = parseInt(bpmSlider.value, 10);
-      bpmDisplay.textContent = bpm;
+      if (playing) resyncMeasure();
     });
   </script>
 </body>
