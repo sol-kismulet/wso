@@ -215,6 +215,30 @@ a:hover::after {
   margin-top: 3rem;
 }
 
+/* ── tools nav ── */
+.tools {
+  text-align: center;
+  padding: 1rem 2rem 0;
+}
+
+.tools a {
+  font-size: 0.95rem;
+  font-weight: 300;
+  color: rgba(255,255,255,0.35);
+  letter-spacing: 0.06em;
+  border-left: none;
+  padding: 0;
+}
+
+.tools a::after {
+  display: none;
+}
+
+.tools a:hover {
+  color: rgba(255,255,255,0.6);
+  background: none;
+}
+
 /* ── footer ── */
 footer {
   width: 100%;

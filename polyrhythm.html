@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>polyrhythm practice</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="song.css">
+  <style>
+    .back {
+      position: fixed;
+      top: 1rem;
+      left: 1rem;
+      font-size: 1rem;
+      color: #666;
+      text-decoration: none;
+    }
+    .back:hover {
+      color: #d8d8ff;
+    }
+    .subtitle {
+      font-size: 1rem;
+      font-style: italic;
+      color: rgba(255,255,255,0.4);
+      text-align: center;
+      margin-top: -1rem;
+    }
+    .beat-row {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      justify-content: center;
+      margin: 0.5rem 0;
+    }
+    .beat-row-label {
+      font-size: 1rem;
+      color: rgba(255,255,255,0.5);
+      width: 2em;
+      text-align: right;
+    }
+    .beat {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 50%;
+      border: 1px solid #666;
+      transition: background 0.05s, border-color 0.05s;
+    }
+    .beat.active {
+      background: #fff;
+      border-color: #fff;
+    }
+    .beat.layer4 {
+      border-color: #8cb4d8;
+    }
+    .beat.layer4.active {
+      background: #8cb4d8;
+      border-color: #8cb4d8;
+    }
+    .beat.layer3 {
+      border-color: #d8a08c;
+    }
+    .beat.layer3.active {
+      background: #d8a08c;
+      border-color: #d8a08c;
+    }
+    .controls {
+      margin-top: 1.5rem;
+    }
+    .layer-toggles {
+      display: flex;
+      gap: 0.8rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .layer-btn {
+      min-width: 6em;
+      text-align: center;
+    }
+    .layer-btn.on {
+      color: #fff;
+      border-color: #fff;
+    }
+    .tempo-display {
+      font-size: 1.4rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <a class="back" href="index.html">← back</a>
+
+  <div class="title">
+    <span>polyrhythm</span>
+    <img src="feather.svg" alt="" class="feather">
+  </div>
+  <p class="subtitle">3 against 4 — mahler 2, m. 250</p>
+
+  <div class="beat-row">
+    <span class="beat-row-label">4</span>
+    <div class="beat layer4" id="b4-0"></div>
+    <div class="beat layer4" id="b4-1"></div>
+    <div class="beat layer4" id="b4-2"></div>
+    <div class="beat layer4" id="b4-3"></div>
+  </div>
+  <div class="beat-row">
+    <span class="beat-row-label">3</span>
+    <div class="beat layer3" id="b3-0"></div>
+    <div class="beat layer3" id="b3-1"></div>
+    <div class="beat layer3" id="b3-2"></div>
+  </div>
+
+  <div class="controls">
+    <div class="layer-toggles">
+      <button class="layer-btn on" id="toggle4">4 beats</button>
+      <button class="layer-btn on" id="toggle3">3 beats</button>
+    </div>
+    <div style="margin-top:1rem; text-align:center;">
+      <div class="tempo-display"><span id="bpm-display">80</span> bpm</div>
+      <input id="bpm" type="range" min="40" max="200" step="1" value="80">
+    </div>
+    <div style="text-align:center; margin-top:1rem;">
+      <button id="start-btn">start</button>
+    </div>
+  </div>
+
+  <script>
+    let audioCtx = null;
+    let playing = false;
+    let layer4On = true;
+    let layer3On = true;
+    let bpm = 80;
+    let schedulerTimer = null;
+
+    let nextBeat4Time = 0;
+    let nextBeat3Time = 0;
+    let currentBeat4 = 0;
+    let currentBeat3 = 0;
+
+    const SCHEDULE_AHEAD = 0.1;
+    const SCHEDULER_INTERVAL = 25;
+
+    const startBtn = document.getElementById('start-btn');
+    const bpmSlider = document.getElementById('bpm');
+    const bpmDisplay = document.getElementById('bpm-display');
+    const toggle4 = document.getElementById('toggle4');
+    const toggle3 = document.getElementById('toggle3');
+
+    function click(time, freq) {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'square';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.15, time);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + 0.03);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(time);
+      osc.stop(time + 0.03);
+    }
+
+    function highlightBeat(layer, index, count) {
+      for (let i = 0; i < count; i++) {
+        const el = document.getElementById('b' + layer + '-' + i);
+        if (i === index) el.classList.add('active');
+        else el.classList.remove('active');
+      }
+    }
+
+    function scheduler() {
+      const measureDuration = (60 / bpm) * 4;
+      const beat4Interval = 60 / bpm;
+      const beat3Interval = measureDuration / 3;
+
+      while (nextBeat4Time < audioCtx.currentTime + SCHEDULE_AHEAD) {
+        if (layer4On) click(nextBeat4Time, 800);
+        const beat = currentBeat4;
+        setTimeout(() => highlightBeat(4, beat, 4), (nextBeat4Time - audioCtx.currentTime) * 1000);
+        currentBeat4 = (currentBeat4 + 1) % 4;
+        nextBeat4Time += beat4Interval;
+      }
+
+      while (nextBeat3Time < audioCtx.currentTime + SCHEDULE_AHEAD) {
+        if (layer3On) click(nextBeat3Time, 1200);
+        const beat = currentBeat3;
+        setTimeout(() => highlightBeat(3, beat, 3), (nextBeat3Time - audioCtx.currentTime) * 1000);
+        currentBeat3 = (currentBeat3 + 1) % 3;
+        nextBeat3Time += beat3Interval;
+      }
+    }
+
+    function start() {
+      if (!audioCtx) audioCtx = new AudioContext();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+
+      currentBeat4 = 0;
+      currentBeat3 = 0;
+      nextBeat4Time = audioCtx.currentTime + 0.05;
+      nextBeat3Time = audioCtx.currentTime + 0.05;
+
+      schedulerTimer = setInterval(scheduler, SCHEDULER_INTERVAL);
+      playing = true;
+      startBtn.textContent = 'stop';
+    }
+
+    function stop() {
+      clearInterval(schedulerTimer);
+      playing = false;
+      startBtn.textContent = 'start';
+      highlightBeat(4, -1, 4);
+      highlightBeat(3, -1, 3);
+    }
+
+    startBtn.addEventListener('click', () => {
+      if (!playing) start();
+      else stop();
+    });
+
+    bpmSlider.addEventListener('input', () => {
+      bpm = parseInt(bpmSlider.value, 10);
+      bpmDisplay.textContent = bpm;
+    });
+
+    toggle4.addEventListener('click', () => {
+      layer4On = !layer4On;
+      toggle4.classList.toggle('on', layer4On);
+    });
+
+    toggle3.addEventListener('click', () => {
+      layer3On = !layer3On;
+      toggle3.classList.toggle('on', layer3On);
+    });
+  </script>
+</body>
+</html>
