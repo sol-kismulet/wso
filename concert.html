@@ -142,10 +142,12 @@
         player = new YT.Player('player', {
           width: '100%',
           height: '100%',
+          videoId: playlist[0].videoId,
           playerVars: {
             origin: window.location.origin,
             rel: 0,
-            controls: 1
+            controls: 1,
+            playsinline: 1
           },
           events: {
             onReady: () => { playerReady = true; },
@@ -153,6 +155,10 @@
               if (event.data === YT.PlayerState.ENDED && started) {
                 playNext();
               }
+            },
+            onError: (event) => {
+              currentTitle.textContent = 'video error (code ' + event.data + ')';
+              console.error('YouTube error:', event.data);
             }
           }
         });
@@ -172,13 +178,17 @@
       });
     }
 
-    function playSong(index) {
+    function playSong(index, isFirstPlay) {
       currentIndex = index;
       const song = playlist[currentIndex];
       const parts = song.title.split(' — ');
       currentTitle.textContent = parts.length === 2 ? parts[1] : song.title;
       updateSetlist();
-      player.loadVideoById(song.videoId);
+      if (isFirstPlay) {
+        player.playVideo();
+      } else {
+        player.loadVideoById(song.videoId);
+      }
     }
 
     function playNext() {
@@ -188,7 +198,7 @@
         loopCount++;
         loopBadge.textContent = 'loop ' + (loopCount + 1);
       }
-      playSong(currentIndex);
+      playSong(currentIndex, false);
     }
 
     startBtn.addEventListener('click', () => {
@@ -198,12 +208,12 @@
         loopCount = 0;
         loopBadge.textContent = 'loop 1';
         startBtn.textContent = 'restart';
-        playSong(0);
+        playSong(0, true);
       } else {
         currentIndex = 0;
         loopCount = 0;
         loopBadge.textContent = 'loop 1';
-        playSong(0);
+        playSong(0, false);
       }
     });
   </script>
