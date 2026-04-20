@@ -9,7 +9,7 @@ Under construction. Core functionality works but has had choppy playback issues 
 ## Architecture (current, post-Gemini review)
 
 ### Audio engine
-- **Pre-rendered AudioBuffers**: Each voice (click, high, bell, low, snap, drum) is generated once at init into an AudioBuffer. Beats play lightweight `AudioBufferSourceNode` copies (fire-and-forget, no pooling needed).
+- **Pre-rendered AudioBuffers**: Each voice (click, high, bell, low, snap, drum) is generated once at init into an AudioBuffer using `audioCtx.sampleRate`. Beats play lightweight `AudioBufferSourceNode` copies (fire-and-forget, no pooling needed).
 - **Web Worker ticker**: Inline Blob worker sends `postMessage('tick')` every 25ms on a separate thread, immune to main-thread congestion and mobile Safari throttling.
 - **Look-ahead**: 120ms. Scheduler runs on each worker tick, scheduling any beats falling within that window using precise `AudioContext.currentTime`.
 - **Audio routing**: Each layer routes through its own `GainNode` (0.5 gain) directly to destination. Two layers sum to max 1.0 — no clipping, no compressor needed.
@@ -32,54 +32,33 @@ Under construction. Core functionality works but has had choppy playback issues 
 | snap | triangle | 2000Hz | crisp tick |
 | drum | square | 200Hz | punchy thump |
 
-Defaults: layer 4 = low, layer 3 = high.
+Defaults: layer 4 = low, layer 3 = high. Each layer independently selectable with preview-on-tap and per-layer mute.
 
-## Known issues / still being worked on
-1. **Choppy playback on iOS** — Has been the main battle. Went through multiple iterations:
-   - v1: `setInterval(25ms)` + 100ms look-ahead + OscillatorNode per beat → choppy, throttled
-   - v2: `setTimeout` recursion + 300ms look-ahead + OscillatorNode per beat → still choppy
-   - v3: `setTimeout` + 500ms look-ahead + pre-rendered AudioBuffers → less choppy but input lag
-   - v4 (current): Web Worker ticker + 120ms look-ahead + pre-rendered buffers → needs testing
-2. **Beat 1 masking** — When both layers fire simultaneously. Solved by removing DynamicsCompressor (was expensive on mobile) and using 0.5 gain per layer instead.
-3. **User hasn't confirmed current version works on mobile** — Still needs testing after the Web Worker rewrite.
+## Iteration history (choppy playback on iOS)
+1. **v1**: `setInterval(25ms)` + 100ms look-ahead + `OscillatorNode` per beat → choppy, throttled on mobile
+2. **v2**: `setTimeout` recursion + 300ms look-ahead + `OscillatorNode` per beat → still choppy
+3. **v3**: `setTimeout` + 500ms look-ahead + pre-rendered `AudioBuffers` → less choppy but 500ms input lag on tempo/mute changes
+4. **v4 (current)**: Web Worker ticker + 120ms look-ahead + pre-rendered buffers + gain normalization → needs testing on mobile
 
-## Gemini's review (key recommendations implemented)
-- ✅ Web Worker ticker instead of main-thread setTimeout
-- ✅ Reduced look-ahead from 500ms to ~120ms for responsive controls
-- ✅ Removed DynamicsCompressor, use gain normalization
-- ✅ Time-stamped visual event queue instead of polling
-- ✅ AudioContext.onstatechange for iOS suspend
-- ✅ Measure duration L with L/4 and L/3 intervals
-- ✅ Fire-and-forget AudioBufferSourceNodes (don't pool)
-- ✅ Use audioCtx.sampleRate for buffer generation (already was)
+## Gemini's review (key recommendations, all implemented)
+- Web Worker ticker instead of main-thread setTimeout
+- Reduced look-ahead from 500ms to ~120ms for responsive controls
+- Removed DynamicsCompressor, use 0.5 gain normalization per layer (less DSP overhead)
+- Time-stamped visual event queue instead of polling
+- AudioContext.onstatechange for iOS suspend/interrupt
+- Measure duration L with L/4 and L/3 intervals to prevent float drift
+- Fire-and-forget AudioBufferSourceNodes (don't pool — creation cost is negligible)
+- Use audioCtx.sampleRate for buffer generation
 
-## Features
-- Per-layer sound selection (6 voices, independently assignable)
-- Preview on tap (hear the sound before starting)
-- Per-layer mute
-- Adjustable tempo (40–200 BPM)
-- Visual beat indicators (blue circles for 4, warm circles for 3)
-- Back link to index page
-- Under construction notice at top
+## Gemini's additional notes
+- iOS "silent switch" bypassed by creating AudioContext inside user gesture
+- iOS sample rate can fluctuate (44.1kHz vs 48kHz) depending on other apps — always use `audioCtx.sampleRate` at generation time
+- DynamicsCompressorNode is computationally expensive on mobile Safari — avoid unless truly needed
+
+## Still needs testing
+- User hasn't confirmed v4 (Web Worker) works on mobile iOS
+- Beat 1 simultaneous playback (both layers) — should be clean with 0.5 gain normalization but unconfirmed on device
 
 ## File structure
 - `polyrhythm.html` — self-contained page, uses `song.css` for base styles
-- Index page has a "polyrhythm practice" link at the bottom (in a `<nav class="tools">` section, styled in `index.css`)
-
-## Discussion notes from this session
-
-### Warble on YouTube slow playback
-- YouTube's `setPlaybackRate()` uses built-in time-stretching that causes warble on sustained tones
-- Can't access YouTube iframe's audio pipeline due to cross-origin restrictions
-- `preservesPitch` property exists on HTML5 video/audio but inaccessible inside YouTube iframe
-- Best option for clean slow practice: host audio files directly and use Web Audio API with proper time-stretching (like SoundTouchJS)
-- Alternative: link out to dedicated practice apps (Amazing Slow Downer, Anytune)
-
-### Cache-busting
-- Static assets (CSS, JS) have no version parameters
-- GitHub Pages handles cache headers but mobile browsers cache aggressively
-- Not yet addressed — would require a build step or manual versioning
-
-### parseTime supports H:MM:SS
-- Added support for hour-format timestamps (`1:02:30`) in addition to `M:SS` and raw seconds
-- 3 colons = hours, 2 = minutes, 1 = raw seconds
+- Index page has a "polyrhythm practice" link at the bottom (in `<nav class="tools">`, styled in `index.css`)
