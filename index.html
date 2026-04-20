@@ -20,6 +20,7 @@
 
   <nav class="tools">
     <a href="polyrhythm.html">polyrhythm practice</a>
+    <a href="concert.html">virtual concert</a>
   </nav>
 
   <footer>wso</footer>
@@ -84,7 +85,7 @@
           section.appendChild(header);
 
           const ul = document.createElement('ul');
-          songs.sort((a, b) => a[1].title.localeCompare(b[1].title));
+          songs.sort((a, b) => (a[1].order || 99) - (b[1].order || 99));
           songs.forEach(([slug, song]) => {
             const li = document.createElement('li');
             const a = document.createElement('a');

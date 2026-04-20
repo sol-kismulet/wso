@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>virtual concert</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="song.css">
+  <style>
+    .back {
+      position: fixed;
+      top: 1rem;
+      left: 1rem;
+      font-size: 1rem;
+      color: #666;
+      text-decoration: none;
+      z-index: 10;
+    }
+    .back:hover {
+      color: #d8d8ff;
+    }
+    .subtitle {
+      font-size: 1rem;
+      font-style: italic;
+      color: rgba(255,255,255,0.4);
+      text-align: center;
+      margin-top: -1rem;
+    }
+    #video-wrapper {
+      width: min(560px, 90vw);
+      aspect-ratio: 16 / 9;
+      background: #111;
+    }
+    #video-wrapper iframe {
+      width: 100%;
+      height: 100%;
+    }
+    .now-playing {
+      font-size: 1.2rem;
+      text-align: center;
+      color: rgba(255,255,255,0.6);
+      margin-top: 0.5rem;
+    }
+    .now-playing .current {
+      color: #fff;
+      font-style: italic;
+    }
+    .setlist {
+      list-style: none;
+      padding: 0;
+      margin: 1.5rem 0;
+      text-align: center;
+    }
+    .setlist li {
+      font-size: 1rem;
+      color: rgba(255,255,255,0.3);
+      padding: 0.3rem 0;
+    }
+    .setlist li.active {
+      color: #fff;
+    }
+    .setlist li.played {
+      color: rgba(255,255,255,0.15);
+    }
+    .loop-badge {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.4);
+      text-align: center;
+      margin-top: 0.5rem;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <a class="back" href="index.html">← back</a>
+
+  <div class="title">
+    <span>virtual concert</span>
+    <img src="feather.svg" alt="" class="feather">
+  </div>
+  <p class="subtitle">transformations — on loop</p>
+
+  <div id="video-wrapper">
+    <div id="player"></div>
+  </div>
+
+  <div class="now-playing">
+    now playing: <span class="current" id="current-title">loading…</span>
+  </div>
+
+  <ul class="setlist" id="setlist"></ul>
+
+  <p class="loop-badge" id="loop-badge"></p>
+
+  <div style="text-align:center; margin-top:1rem;">
+    <button id="start-btn">start concert</button>
+  </div>
+
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script>
+    let player;
+    let playerReady = false;
+    let playlist = [];
+    let currentIndex = 0;
+    let loopCount = 0;
+    let started = false;
+
+    const currentTitle = document.getElementById('current-title');
+    const setlistEl = document.getElementById('setlist');
+    const loopBadge = document.getElementById('loop-badge');
+    const startBtn = document.getElementById('start-btn');
+
+    fetch('songs.json')
+      .then(r => {
+        if (!r.ok) throw new Error(r.status);
+        return r.json();
+      })
+      .then(data => {
+        playlist = Object.entries(data.songs || {})
+          .sort((a, b) => (a[1].order || 99) - (b[1].order || 99))
+          .map(([slug, song]) => song);
+
+        playlist.forEach((song, i) => {
+          const li = document.createElement('li');
+          const parts = song.title.split(' — ');
+          li.textContent = parts.length === 2 ? parts[1] : song.title;
+          li.id = 'setlist-' + i;
+          setlistEl.appendChild(li);
+        });
+
+        currentTitle.textContent = 'ready';
+        initPlayer();
+      })
+      .catch(() => {
+        currentTitle.textContent = 'failed to load';
+      });
+
+    function initPlayer() {
+      window.onYouTubeIframeAPIReady = function () {
+        player = new YT.Player('player', {
+          width: '100%',
+          height: '100%',
+          playerVars: {
+            origin: window.location.origin,
+            rel: 0,
+            controls: 1
+          },
+          events: {
+            onReady: () => { playerReady = true; },
+            onStateChange: (event) => {
+              if (event.data === YT.PlayerState.ENDED && started) {
+                playNext();
+              }
+            }
+          }
+        });
+      };
+
+      if (window.YT && window.YT.Player) {
+        window.onYouTubeIframeAPIReady();
+      }
+    }
+
+    function updateSetlist() {
+      playlist.forEach((_, i) => {
+        const li = document.getElementById('setlist-' + i);
+        li.className = '';
+        if (i < currentIndex) li.className = 'played';
+        if (i === currentIndex) li.className = 'active';
+      });
+    }
+
+    function playSong(index) {
+      currentIndex = index;
+      const song = playlist[currentIndex];
+      const parts = song.title.split(' — ');
+      currentTitle.textContent = parts.length === 2 ? parts[1] : song.title;
+      updateSetlist();
+      player.loadVideoById(song.videoId);
+    }
+
+    function playNext() {
+      currentIndex++;
+      if (currentIndex >= playlist.length) {
+        currentIndex = 0;
+        loopCount++;
+        loopBadge.textContent = 'loop ' + (loopCount + 1);
+      }
+      playSong(currentIndex);
+    }
+
+    startBtn.addEventListener('click', () => {
+      if (!playerReady || playlist.length === 0) return;
+      if (!started) {
+        started = true;
+        loopCount = 0;
+        loopBadge.textContent = 'loop 1';
+        startBtn.textContent = 'restart';
+        playSong(0);
+      } else {
+        currentIndex = 0;
+        loopCount = 0;
+        loopBadge.textContent = 'loop 1';
+        playSong(0);
+      }
+    });
+  </script>
+</body>
+</html>
