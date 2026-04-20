@@ -160,12 +160,13 @@
     let compressor = null;
     let layer4Node = null;
     let layer3Node = null;
+    let buffers = {};
     let playing = false;
     let bpm = 80;
-    let schedulerTimer = null;
+    let schedulerTimeout = null;
     let animFrame = null;
-    let layer4Voice = voices.low;
-    let layer3Voice = voices.high;
+    let layer4Voice = 'low';
+    let layer3Voice = 'high';
     let layer4Muted = false;
     let layer3Muted = false;
 
@@ -178,12 +179,31 @@
     let displayBeat4 = -1;
     let displayBeat3 = -1;
 
-    const SCHEDULE_AHEAD = 0.3;
-    const SCHEDULER_INTERVAL = 50;
+    const SCHEDULE_AHEAD = 0.5;
 
     const startBtn = document.getElementById('start-btn');
     const bpmSlider = document.getElementById('bpm');
     const bpmDisplay = document.getElementById('bpm-display');
+
+    function renderBuffer(voice) {
+      const sr = audioCtx.sampleRate;
+      const len = Math.ceil(sr * (voice.decay + 0.02));
+      const buf = audioCtx.createBuffer(1, len, sr);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) {
+        const t = i / sr;
+        const phase = voice.freq * t * 2 * Math.PI;
+        let sample;
+        if (voice.wave === 'sine') sample = Math.sin(phase);
+        else if (voice.wave === 'square') sample = Math.sin(phase) >= 0 ? 1 : -1;
+        else sample = 2 * Math.abs(2 * (t * voice.freq % 1) - 1) - 1;
+        const env = t < voice.decay
+          ? voice.gain * Math.pow(0.001 / voice.gain, t / voice.decay)
+          : 0;
+        data[i] = sample * env;
+      }
+      return buf;
+    }
 
     function initAudio() {
       audioCtx = new AudioContext();
@@ -200,6 +220,17 @@
       layer3Node = audioCtx.createGain();
       layer3Node.gain.value = 1.0;
       layer3Node.connect(compressor);
+
+      Object.keys(voices).forEach(key => {
+        buffers[key] = renderBuffer(voices[key]);
+      });
+    }
+
+    function playBuffer(key, time, dest) {
+      const src = audioCtx.createBufferSource();
+      src.buffer = buffers[key];
+      src.connect(dest);
+      src.start(time);
     }
 
     function buildLayerConfig(containerId, labelClass, defaultKey, onSelect, onMute) {
@@ -218,10 +249,10 @@
         btn.addEventListener('click', () => {
           Object.values(btns).forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
-          onSelect(voices[key]);
+          onSelect(key);
           if (!audioCtx) initAudio();
           if (audioCtx.state === 'suspended') audioCtx.resume();
-          playTone(audioCtx.currentTime, voices[key], compressor);
+          playBuffer(key, audioCtx.currentTime, compressor);
         });
         btns[key] = btn;
         container.appendChild(btn);
@@ -238,26 +269,13 @@
     }
 
     buildLayerConfig('config4', 'l4', 'low',
-      v => { layer4Voice = v; },
+      key => { layer4Voice = key; },
       () => { layer4Muted = !layer4Muted; return layer4Muted; }
     );
     buildLayerConfig('config3', 'l3', 'high',
-      v => { layer3Voice = v; },
+      key => { layer3Voice = key; },
       () => { layer3Muted = !layer3Muted; return layer3Muted; }
     );
-
-    function playTone(time, voice, dest) {
-      const osc = audioCtx.createOscillator();
-      const env = audioCtx.createGain();
-      osc.type = voice.wave;
-      osc.frequency.value = voice.freq;
-      env.gain.setValueAtTime(voice.gain, time);
-      env.gain.exponentialRampToValueAtTime(0.001, time + voice.decay);
-      osc.connect(env);
-      env.connect(dest);
-      osc.start(time);
-      osc.stop(time + voice.decay + 0.01);
-    }
 
     function highlightBeat(layer, index, count) {
       for (let i = 0; i < count; i++) {
@@ -273,7 +291,7 @@
       const beat3Interval = measureDuration / 3;
 
       while (nextBeat4Time < audioCtx.currentTime + SCHEDULE_AHEAD) {
-        if (!layer4Muted) playTone(nextBeat4Time, layer4Voice, layer4Node);
+        if (!layer4Muted) playBuffer(layer4Voice, nextBeat4Time, layer4Node);
         lastBeat4Time = nextBeat4Time;
         displayBeat4 = currentBeat4;
         currentBeat4 = (currentBeat4 + 1) % 4;
@@ -281,12 +299,14 @@
       }
 
       while (nextBeat3Time < audioCtx.currentTime + SCHEDULE_AHEAD) {
-        if (!layer3Muted) playTone(nextBeat3Time, layer3Voice, layer3Node);
+        if (!layer3Muted) playBuffer(layer3Voice, nextBeat3Time, layer3Node);
         lastBeat3Time = nextBeat3Time;
         displayBeat3 = currentBeat3;
         currentBeat3 = (currentBeat3 + 1) % 3;
         nextBeat3Time += beat3Interval;
       }
+
+      if (playing) schedulerTimeout = setTimeout(scheduler, 100);
     }
 
     function updateVisuals() {
@@ -298,12 +318,10 @@
       const beat3Interval = measureDuration / 3;
 
       const timeSince4 = now - lastBeat4Time;
-      const show4 = timeSince4 >= 0 && timeSince4 < beat4Interval * 0.5;
-      highlightBeat(4, show4 ? displayBeat4 : -1, 4);
+      highlightBeat(4, timeSince4 >= 0 && timeSince4 < beat4Interval * 0.5 ? displayBeat4 : -1, 4);
 
       const timeSince3 = now - lastBeat3Time;
-      const show3 = timeSince3 >= 0 && timeSince3 < beat3Interval * 0.5;
-      highlightBeat(3, show3 ? displayBeat3 : -1, 3);
+      highlightBeat(3, timeSince3 >= 0 && timeSince3 < beat3Interval * 0.5 ? displayBeat3 : -1, 3);
 
       animFrame = requestAnimationFrame(updateVisuals);
     }
@@ -316,21 +334,21 @@
       currentBeat3 = 0;
       displayBeat4 = -1;
       displayBeat3 = -1;
-      nextBeat4Time = audioCtx.currentTime + 0.05;
-      nextBeat3Time = audioCtx.currentTime + 0.05;
+      nextBeat4Time = audioCtx.currentTime + 0.1;
+      nextBeat3Time = audioCtx.currentTime + 0.1;
       lastBeat4Time = 0;
       lastBeat3Time = 0;
 
-      schedulerTimer = setInterval(scheduler, SCHEDULER_INTERVAL);
-      animFrame = requestAnimationFrame(updateVisuals);
       playing = true;
+      scheduler();
+      animFrame = requestAnimationFrame(updateVisuals);
       startBtn.textContent = 'stop';
     }
 
     function stop() {
-      clearInterval(schedulerTimer);
-      cancelAnimationFrame(animFrame);
       playing = false;
+      clearTimeout(schedulerTimeout);
+      cancelAnimationFrame(animFrame);
       startBtn.textContent = 'start';
       highlightBeat(4, -1, 4);
       highlightBeat(3, -1, 3);
