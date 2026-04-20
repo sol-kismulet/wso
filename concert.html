@@ -106,11 +106,29 @@
     let currentIndex = 0;
     let loopCount = 0;
     let started = false;
+    let currentEndTime = null;
+    let endCheckInterval = null;
 
     const currentTitle = document.getElementById('current-title');
     const setlistEl = document.getElementById('setlist');
     const loopBadge = document.getElementById('loop-badge');
     const startBtn = document.getElementById('start-btn');
+
+    function parseTime(t) {
+      const parts = t.split(':');
+      if (parts.length === 1) return parseFloat(parts[0]) || 0;
+      if (parts.length === 3) return parseInt(parts[0], 10) * 3600 + parseInt(parts[1], 10) * 60 + parseFloat(parts[2]);
+      return parseInt(parts[0], 10) * 60 + parseFloat(parts[1]);
+    }
+
+    function getSongBounds(song) {
+      if (!song.loops || song.loops.length === 0) return { start: 0, end: null };
+      const first = song.loops[0];
+      const last = song.loops[song.loops.length - 1];
+      const startVal = Array.isArray(first) ? first[0] : first.start;
+      const endVal = Array.isArray(last) ? last[1] : last.end;
+      return { start: parseTime(startVal), end: parseTime(endVal) };
+    }
 
     fetch('songs.json')
       .then(r => {
@@ -138,6 +156,7 @@
       });
 
     function initPlayer() {
+      const firstBounds = getSongBounds(playlist[0]);
       window.onYouTubeIframeAPIReady = function () {
         player = new YT.Player('player', {
           width: '100%',
@@ -147,7 +166,8 @@
             origin: window.location.origin,
             rel: 0,
             controls: 1,
-            playsinline: 1
+            playsinline: 1,
+            start: Math.floor(firstBounds.start)
           },
           events: {
             onReady: () => { playerReady = true; },
@@ -181,13 +201,19 @@
     function playSong(index, isFirstPlay) {
       currentIndex = index;
       const song = playlist[currentIndex];
+      const bounds = getSongBounds(song);
+      currentEndTime = bounds.end;
       const parts = song.title.split(' — ');
       currentTitle.textContent = parts.length === 2 ? parts[1] : song.title;
       updateSetlist();
       if (isFirstPlay) {
+        player.seekTo(bounds.start, true);
         player.playVideo();
       } else {
-        player.loadVideoById(song.videoId);
+        player.loadVideoById({
+          videoId: song.videoId,
+          startSeconds: bounds.start
+        });
       }
     }
 
@@ -201,6 +227,15 @@
       playSong(currentIndex, false);
     }
 
+    function checkEnd() {
+      if (!started || currentEndTime === null) return;
+      try {
+        if (player.getCurrentTime() >= currentEndTime) {
+          playNext();
+        }
+      } catch (e) {}
+    }
+
     startBtn.addEventListener('click', () => {
       if (!playerReady || playlist.length === 0) return;
       if (!started) {
@@ -209,6 +244,7 @@
         loopBadge.textContent = 'loop 1';
         startBtn.textContent = 'restart';
         playSong(0, true);
+        if (!endCheckInterval) endCheckInterval = setInterval(checkEnd, 500);
       } else {
         currentIndex = 0;
         loopCount = 0;
