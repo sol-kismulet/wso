@@ -82,6 +82,23 @@
       color: #fff;
       border-color: #fff;
     }
+    .preset-row {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 0.8rem;
+    }
+    .preset-btn {
+      font-size: 0.85rem;
+      padding: 0.3em 0.7em;
+      color: #888;
+      border-color: #555;
+    }
+    .preset-btn.active {
+      color: #fff;
+      border-color: #fff;
+    }
     .tempo-display {
       font-size: 1.4rem;
       text-align: center;
@@ -116,6 +133,7 @@
       <button class="layer-btn on" id="toggle4">4 beats</button>
       <button class="layer-btn on" id="toggle3">3 beats</button>
     </div>
+    <div class="preset-row" id="presets"></div>
     <div style="margin-top:1rem; text-align:center;">
       <div class="tempo-display"><span id="bpm-display">80</span> bpm</div>
       <input id="bpm" type="range" min="40" max="200" step="1" value="80">
@@ -126,12 +144,41 @@
   </div>
 
   <script>
+    const presets = {
+      woodblock: {
+        name: 'woodblock',
+        layer4: { wave: 'square', freq: 800, gain: 0.15, decay: 0.03 },
+        layer3: { wave: 'square', freq: 1200, gain: 0.15, decay: 0.03 }
+      },
+      bell: {
+        name: 'bell',
+        layer4: { wave: 'sine', freq: 440, gain: 0.3, decay: 0.4 },
+        layer3: { wave: 'sine', freq: 660, gain: 0.25, decay: 0.35 }
+      },
+      clave: {
+        name: 'clave',
+        layer4: { wave: 'triangle', freq: 2500, gain: 0.2, decay: 0.015 },
+        layer3: { wave: 'triangle', freq: 3500, gain: 0.18, decay: 0.012 }
+      },
+      soft: {
+        name: 'soft',
+        layer4: { wave: 'sine', freq: 330, gain: 0.2, decay: 0.15 },
+        layer3: { wave: 'sine', freq: 523, gain: 0.18, decay: 0.12 }
+      },
+      drum: {
+        name: 'drum',
+        layer4: { wave: 'square', freq: 150, gain: 0.25, decay: 0.06 },
+        layer3: { wave: 'square', freq: 400, gain: 0.15, decay: 0.04 }
+      }
+    };
+
     let audioCtx = null;
     let playing = false;
     let layer4On = true;
     let layer3On = true;
     let bpm = 80;
     let schedulerTimer = null;
+    let currentPreset = presets.woodblock;
 
     let nextBeat4Time = 0;
     let nextBeat3Time = 0;
@@ -146,18 +193,32 @@
     const bpmDisplay = document.getElementById('bpm-display');
     const toggle4 = document.getElementById('toggle4');
     const toggle3 = document.getElementById('toggle3');
+    const presetsContainer = document.getElementById('presets');
 
-    function click(time, freq) {
+    // Build preset buttons
+    Object.keys(presets).forEach(key => {
+      const btn = document.createElement('button');
+      btn.className = 'preset-btn' + (key === 'woodblock' ? ' active' : '');
+      btn.textContent = presets[key].name;
+      btn.addEventListener('click', () => {
+        currentPreset = presets[key];
+        presetsContainer.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+      presetsContainer.appendChild(btn);
+    });
+
+    function playTone(time, voice) {
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
-      osc.type = 'square';
-      osc.frequency.value = freq;
-      gain.gain.setValueAtTime(0.15, time);
-      gain.gain.exponentialRampToValueAtTime(0.001, time + 0.03);
+      osc.type = voice.wave;
+      osc.frequency.value = voice.freq;
+      gain.gain.setValueAtTime(voice.gain, time);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + voice.decay);
       osc.connect(gain);
       gain.connect(audioCtx.destination);
       osc.start(time);
-      osc.stop(time + 0.03);
+      osc.stop(time + voice.decay + 0.01);
     }
 
     function highlightBeat(layer, index, count) {
@@ -174,7 +235,7 @@
       const beat3Interval = measureDuration / 3;
 
       while (nextBeat4Time < audioCtx.currentTime + SCHEDULE_AHEAD) {
-        if (layer4On) click(nextBeat4Time, 800);
+        if (layer4On) playTone(nextBeat4Time, currentPreset.layer4);
         const beat = currentBeat4;
         setTimeout(() => highlightBeat(4, beat, 4), (nextBeat4Time - audioCtx.currentTime) * 1000);
         currentBeat4 = (currentBeat4 + 1) % 4;
@@ -182,7 +243,7 @@
       }
 
       while (nextBeat3Time < audioCtx.currentTime + SCHEDULE_AHEAD) {
-        if (layer3On) click(nextBeat3Time, 1200);
+        if (layer3On) playTone(nextBeat3Time, currentPreset.layer3);
         const beat = currentBeat3;
         setTimeout(() => highlightBeat(3, beat, 3), (nextBeat3Time - audioCtx.currentTime) * 1000);
         currentBeat3 = (currentBeat3 + 1) % 3;
