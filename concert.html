@@ -21,6 +21,14 @@
     .back:hover {
       color: #d8d8ff;
     }
+    .under-construction {
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.4);
+      text-align: center;
+      margin-top: -0.5rem;
+      margin-bottom: 0.5rem;
+      letter-spacing: 0.05em;
+    }
     .subtitle {
       font-size: 1rem;
       font-style: italic;
@@ -82,6 +90,8 @@
   </div>
   <p class="subtitle">transformations — on loop</p>
 
+  <p class="under-construction">&#9888; under construction &#9888;</p>
+
   <div id="video-wrapper">
     <div id="player"></div>
   </div>
@@ -122,12 +132,10 @@
     }
 
     function getSongBounds(song) {
-      if (!song.loops || song.loops.length === 0) return { start: 0, end: null };
-      const first = song.loops[0];
-      const last = song.loops[song.loops.length - 1];
-      const startVal = Array.isArray(first) ? first[0] : first.start;
-      const endVal = Array.isArray(last) ? last[1] : last.end;
-      return { start: parseTime(startVal), end: parseTime(endVal) };
+      return {
+        start: song.concertStart ? parseTime(song.concertStart) : 0,
+        end: song.concertEnd ? parseTime(song.concertEnd) : null
+      };
     }
 
     fetch('songs.json')

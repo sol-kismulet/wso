@@ -33,6 +33,8 @@
       "videoId": "JZLteE1RWgo",
       "concert": "transformations",
       "order": 3,
+      "concertStart": "17:12",
+      "concertEnd": "40:00",
       "loops": [
         { "start": "17:12", "end": "18:20", "label": "Beginning" },
         { "start": "18:20", "end": "19:15", "label": "#1" },
