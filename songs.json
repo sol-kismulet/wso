@@ -8,6 +8,8 @@
       "videoId": "uMbOFc9xIyo",
       "concert": "transformations",
       "order": 1,
+      "concertStart": "0:00",
+      "concertEnd": "13:32",
       "loops": [
         ["0:00", "1:00"],
         ["1:00", "2:00"],
