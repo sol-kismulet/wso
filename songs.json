@@ -5,16 +5,37 @@
   "songs": {
     "coleman-umoja": {
       "title": "valerie coleman — umoja",
-      "videoId": "uMbOFc9xIyo",
+      "videoId": "1m6II3pqTsI",
       "concert": "transformations",
       "order": 1,
-      "concertStart": "0:00",
+      "concertStart": "0:11",
       "concertEnd": "13:32",
       "loops": [
-        ["0:00", "1:00"],
-        ["1:00", "2:00"],
-        ["2:00", "3:00"],
-        ["3:00", "13:32"]
+        { "start": "0:11", "end": "1:26", "label": "Beginning" },
+        { "start": "1:26", "end": "2:19", "label": "m. 21" },
+        { "start": "2:19", "end": "2:42", "label": "m. 39" },
+        { "start": "2:42", "end": "3:38", "label": "Letter A" },
+        { "start": "3:38", "end": "4:25", "label": "m. 70" },
+        { "start": "4:25", "end": "5:10", "label": "Letter B" },
+        { "start": "5:10", "end": "6:07", "label": "Letter C" },
+        { "start": "6:07", "end": "6:27", "label": "m. 147" },
+        { "start": "6:27", "end": "7:12", "label": "Letter D" },
+        { "start": "7:12", "end": "7:30", "label": "Letter E" },
+        { "start": "7:30", "end": "8:08", "label": "m. 195" },
+        { "start": "8:08", "end": "8:51", "label": "m. 213 & F" },
+        { "start": "8:51", "end": "9:17", "label": "m. 253 & G" },
+        { "start": "9:17", "end": "9:26", "label": "m. 275" },
+        { "start": "9:26", "end": "9:43", "label": "Letter H" },
+        { "start": "9:43", "end": "9:57", "label": "m. 298" },
+        { "start": "9:57", "end": "10:06", "label": "m. 310" },
+        { "start": "10:06", "end": "10:18", "label": "m. 318" },
+        { "start": "10:18", "end": "10:45", "label": "m. 330" },
+        { "start": "10:45", "end": "11:21", "label": "Letter I" },
+        { "start": "11:21", "end": "11:38", "label": "m. 387" },
+        { "start": "11:38", "end": "11:53", "label": "m. 403" },
+        { "start": "11:53", "end": "12:19", "label": "Letter J" },
+        { "start": "12:19", "end": "12:48", "label": "m. 441" },
+        { "start": "12:48", "end": "13:32", "label": "Letter K" }
       ]
     },
     "brahms-haydn-variations": {
