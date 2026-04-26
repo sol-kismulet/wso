@@ -49,7 +49,8 @@
         { "start": "3:38", "end": "4:37", "label": "Var. II, più vivace, mm. 59–87" },
         { "start": "4:37", "end": "6:17", "label": "Var. III, con moto, mm. 88–145" },
         { "start": "6:17", "end": "8:44", "label": "Var. IV, andante con moto, mm. 146–205" },
-        { "start": "8:44", "end": "9:42", "label": "Var. V, vivace, mm. 206–263" }
+        { "start": "8:44", "end": "9:42", "label": "Var. V, vivace, mm. 206–263" },
+        { "start": "9:42", "end": "11:05", "label": "Var. VI, vivace, mm. 264–292" }
       ]
     },
     "mahler-symphony-2": {
