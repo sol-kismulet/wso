@@ -156,7 +156,204 @@
     </div>
   </div>
 
+  <hr style="border:none; border-top:1px solid rgba(255,255,255,0.1); margin:2.5rem 0 1.5rem;">
+
+  <div class="title" style="font-size:2rem;">
+    <span>umoja m. 23</span>
+  </div>
+  <p class="subtitle">&#9833; + &#9833;. + &#9833;. against 4/4</p>
+
+  <div class="beat-row">
+    <span class="beat-row-label">4/4</span>
+    <div class="beat layer4" id="u4-0"></div>
+    <div class="beat layer4" id="u4-1"></div>
+    <div class="beat layer4" id="u4-2"></div>
+    <div class="beat layer4" id="u4-3"></div>
+  </div>
+  <div class="beat-row">
+    <span class="beat-row-label">pat.</span>
+    <div class="beat layer3" id="u3-0"></div>
+    <div class="beat layer3" id="u3-1"></div>
+    <div class="beat layer3" id="u3-2"></div>
+  </div>
+
+  <div class="controls">
+    <div class="layer-config" id="u-config4"></div>
+    <div class="layer-config" id="u-config3"></div>
+    <div style="margin-top:1rem; text-align:center;">
+      <div class="tempo-display"><span id="u-bpm-display">44</span> bpm</div>
+      <input id="u-bpm" type="range" min="20" max="120" step="1" value="44">
+    </div>
+    <div style="text-align:center; margin-top:1rem;">
+      <button id="u-start-btn">start</button>
+    </div>
+  </div>
+
   <script>
+    // --- Umoja m. 23 exercise ---
+    // Pattern: quarter (1 beat) + dotted quarter (1.5 beats) + dotted quarter (1.5 beats)
+    // Beat positions as fractions of measure: 0, 0.25, 0.625
+    const U_POS4 = [0, 0.25, 0.5, 0.75];
+    const U_POS3 = [0, 0.25, 0.625];
+
+    let u_bpm = 44;
+    let u_playing = false;
+    let u_startTime = 0;
+    let u_scheduled4 = 0;
+    let u_scheduled3 = 0;
+    let u_layer4Voice = 'low';
+    let u_layer3Voice = 'high';
+    let u_layer4Muted = false;
+    let u_layer3Muted = false;
+    let u_beatQueue = [];
+    let u_animFrame = null;
+    let u_dim4Timer = null;
+    let u_dim3Timer = null;
+
+    const u_startBtn = document.getElementById('u-start-btn');
+    const u_bpmSlider = document.getElementById('u-bpm');
+    const u_bpmDisplay = document.getElementById('u-bpm-display');
+
+    // Update worker to tick both exercises
+    function ensureWorker() {
+      if (!worker) {
+        worker = createWorker();
+        // Override handler to tick both
+        worker.onmessage = function() {
+          if (playing) scheduler();
+          if (u_playing) u_scheduler();
+        };
+      }
+    }
+
+    buildLayerConfig('u-config4', 'l4', 'low',
+      key => { u_layer4Voice = key; },
+      () => { u_layer4Muted = !u_layer4Muted; return u_layer4Muted; }
+    );
+    buildLayerConfig('u-config3', 'l3', 'high',
+      key => { u_layer3Voice = key; },
+      () => { u_layer3Muted = !u_layer3Muted; return u_layer3Muted; }
+    );
+
+    function u_highlightBeat(layer, index, count) {
+      for (let i = 0; i < count; i++) {
+        const el = document.getElementById('u' + layer + '-' + i);
+        if (i === index) el.classList.add('active');
+        else el.classList.remove('active');
+      }
+    }
+
+    function u_scheduler() {
+      const L = (60 / u_bpm) * 4;
+
+      while (true) {
+        const m = Math.floor(u_scheduled4 / 4);
+        const idx = u_scheduled4 % 4;
+        const t = u_startTime + m * L + U_POS4[idx] * L;
+        if (t >= audioCtx.currentTime + SCHEDULE_AHEAD) break;
+        if (!u_layer4Muted) playBuffer(u_layer4Voice, t, layer4Node);
+        u_beatQueue.push({ time: t, layer: 4, index: idx });
+        u_scheduled4++;
+      }
+
+      while (true) {
+        const m = Math.floor(u_scheduled3 / 3);
+        const idx = u_scheduled3 % 3;
+        const t = u_startTime + m * L + U_POS3[idx] * L;
+        if (t >= audioCtx.currentTime + SCHEDULE_AHEAD) break;
+        if (!u_layer3Muted) playBuffer(u_layer3Voice, t, layer3Node);
+        u_beatQueue.push({ time: t, layer: 3, index: idx });
+        u_scheduled3++;
+      }
+    }
+
+    function u_updateVisuals() {
+      if (!u_playing) return;
+      const now = audioCtx.currentTime;
+      const L = (60 / u_bpm) * 4;
+
+      let active4 = -1;
+      let active3 = -1;
+
+      while (u_beatQueue.length > 0 && u_beatQueue[0].time <= now) {
+        const b = u_beatQueue.shift();
+        if (b.layer === 4) active4 = b.index;
+        else active3 = b.index;
+      }
+
+      if (active4 >= 0) {
+        u_highlightBeat(4, active4, 4);
+        clearTimeout(u_dim4Timer);
+        u_dim4Timer = setTimeout(() => u_highlightBeat(4, -1, 4), (L / 4) * 400);
+      }
+      if (active3 >= 0) {
+        u_highlightBeat(3, active3, 3);
+        clearTimeout(u_dim3Timer);
+        const durations = [0.25, 0.375, 0.375];
+        u_dim3Timer = setTimeout(() => u_highlightBeat(3, -1, 3), durations[active3] * L * 400);
+      }
+
+      u_animFrame = requestAnimationFrame(u_updateVisuals);
+    }
+
+    function u_start() {
+      if (playing) stop();
+      if (!audioCtx) initAudio();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+
+      u_scheduled4 = 0;
+      u_scheduled3 = 0;
+      u_beatQueue = [];
+      u_startTime = audioCtx.currentTime + 0.05;
+
+      ensureWorker();
+      worker.postMessage('start');
+      u_playing = true;
+      u_animFrame = requestAnimationFrame(u_updateVisuals);
+      u_startBtn.textContent = 'stop';
+    }
+
+    function u_stop() {
+      u_playing = false;
+      if (!playing && worker) worker.postMessage('stop');
+      cancelAnimationFrame(u_animFrame);
+      clearTimeout(u_dim4Timer);
+      clearTimeout(u_dim3Timer);
+      cancelScheduledBeats();
+      u_beatQueue = [];
+      u_startBtn.textContent = 'start';
+      u_highlightBeat(4, -1, 4);
+      u_highlightBeat(3, -1, 3);
+    }
+
+    u_startBtn.addEventListener('click', () => {
+      if (!u_playing) u_start();
+      else u_stop();
+    });
+
+    u_bpmSlider.addEventListener('input', () => {
+      u_bpmDisplay.textContent = parseInt(u_bpmSlider.value, 10);
+    });
+
+    u_bpmSlider.addEventListener('change', () => {
+      u_bpm = parseInt(u_bpmSlider.value, 10);
+      if (u_playing) {
+        cancelScheduledBeats();
+        u_beatQueue = [];
+        u_scheduled4 = 0;
+        u_scheduled3 = 0;
+        u_startTime = audioCtx.currentTime + 0.05;
+      }
+    });
+
+    // Override Mahler start/stop to be mutually exclusive
+    const _origStart = start;
+    start = function() {
+      if (u_playing) u_stop();
+      ensureWorker();
+      _origStart();
+    };
+  </script>
     const voices = {
       click:    { name: 'click',    wave: 'square',   freq: 800,  gain: 0.3, decay: 0.05 },
       high:     { name: 'high',     wave: 'square',   freq: 1400, gain: 0.25, decay: 0.04 },
