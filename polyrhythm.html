@@ -16,10 +16,9 @@
       font-size: 1rem;
       color: #666;
       text-decoration: none;
+      z-index: 10;
     }
-    .back:hover {
-      color: #d8d8ff;
-    }
+    .back:hover { color: #d8d8ff; }
     .under-construction {
       font-size: 0.9rem;
       color: rgba(255,255,255,0.4);
@@ -28,50 +27,44 @@
       margin-bottom: 0.5rem;
       letter-spacing: 0.05em;
     }
-    .subtitle {
+    .ex-subtitle {
       font-size: 1rem;
       font-style: italic;
       color: rgba(255,255,255,0.4);
       text-align: center;
-      margin-top: -1rem;
+      margin: -0.5rem 0 0.8rem;
     }
-    .beat-row {
-      display: flex;
-      gap: 1rem;
-      align-items: center;
-      justify-content: center;
-      margin: 0.5rem 0;
+    .beat-track {
+      position: relative;
+      width: min(400px, 80vw);
+      height: 2.5rem;
+      margin: 0.3rem auto;
     }
-    .beat-row-label {
+    .beat-track-label {
+      position: absolute;
+      left: -2.5em;
+      top: 50%;
+      transform: translateY(-50%);
       font-size: 1rem;
       color: rgba(255,255,255,0.5);
-      width: 2em;
-      text-align: right;
     }
-    .beat {
+    .beat-track-label.l4 { color: #8cb4d8; }
+    .beat-track-label.l3 { color: #d8a08c; }
+    .dot {
+      position: absolute;
       width: 2rem;
       height: 2rem;
       border-radius: 50%;
       border: 1px solid #666;
+      top: 50%;
+      transform: translate(-50%, -50%);
       transition: background 0.05s, border-color 0.05s;
     }
-    .beat.layer4 {
-      border-color: #8cb4d8;
-    }
-    .beat.layer4.active {
-      background: #8cb4d8;
-      border-color: #8cb4d8;
-    }
-    .beat.layer3 {
-      border-color: #d8a08c;
-    }
-    .beat.layer3.active {
-      background: #d8a08c;
-      border-color: #d8a08c;
-    }
-    .controls {
-      margin-top: 1.5rem;
-    }
+    .dot.l4 { border-color: #8cb4d8; }
+    .dot.l4.active { background: #8cb4d8; border-color: #8cb4d8; }
+    .dot.l3 { border-color: #d8a08c; }
+    .dot.l3.active { background: #d8a08c; border-color: #d8a08c; }
+    .controls { margin-top: 1.5rem; }
     .layer-config {
       display: flex;
       align-items: center;
@@ -94,28 +87,26 @@
       color: #666;
       border-color: #444;
     }
-    .sound-btn.active {
-      color: #fff;
-      border-color: #fff;
-    }
-    .sound-btn.muted {
-      color: #444;
-      border-color: #333;
-      text-decoration: line-through;
-    }
+    .sound-btn.active { color: #fff; border-color: #fff; }
     .mute-btn {
       font-size: 0.85rem;
       padding: 0.3em 0.5em;
       color: #666;
       border-color: #444;
     }
-    .mute-btn.muted {
-      color: #c66;
-      border-color: #c66;
+    .mute-btn.muted { color: #c66; border-color: #c66; }
+    .tempo-display { font-size: 1.4rem; text-align: center; }
+    .separator {
+      border: none;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      margin: 2.5rem 0 1.5rem;
     }
-    .tempo-display {
-      font-size: 1.4rem;
+    .ex-title {
+      font-size: 2rem;
       text-align: center;
+      font-family: "Cormorant Garamond", serif;
+      font-weight: 300;
+      margin: 0.5rem 0 0;
     }
   </style>
 </head>
@@ -125,57 +116,37 @@
   <p class="under-construction">&#9888; under construction &#9888;</p>
 
   <div class="title">
-    <span>polyrhythm</span>
+    <span>rhythm practice</span>
     <img src="feather.svg" alt="" class="feather">
   </div>
-  <p class="subtitle">3 against 4 — mahler 2, m. 250</p>
 
-  <div class="beat-row">
-    <span class="beat-row-label">4</span>
-    <div class="beat layer4" id="b4-0"></div>
-    <div class="beat layer4" id="b4-1"></div>
-    <div class="beat layer4" id="b4-2"></div>
-    <div class="beat layer4" id="b4-3"></div>
-  </div>
-  <div class="beat-row">
-    <span class="beat-row-label">3</span>
-    <div class="beat layer3" id="b3-0"></div>
-    <div class="beat layer3" id="b3-1"></div>
-    <div class="beat layer3" id="b3-2"></div>
-  </div>
+  <!-- === Mahler 3-against-4 === -->
+  <p class="ex-title">3 against 4</p>
+  <p class="ex-subtitle">mahler 2, m. 250</p>
+
+  <div class="beat-track" id="m-track4"></div>
+  <div class="beat-track" id="m-track3"></div>
 
   <div class="controls">
-    <div class="layer-config" id="config4"></div>
-    <div class="layer-config" id="config3"></div>
+    <div class="layer-config" id="m-config4"></div>
+    <div class="layer-config" id="m-config3"></div>
     <div style="margin-top:1rem; text-align:center;">
-      <div class="tempo-display"><span id="bpm-display">80</span> bpm</div>
-      <input id="bpm" type="range" min="40" max="200" step="1" value="80">
+      <div class="tempo-display"><span id="m-bpm-display">80</span> bpm</div>
+      <input id="m-bpm" type="range" min="40" max="200" step="1" value="80">
     </div>
     <div style="text-align:center; margin-top:1rem;">
-      <button id="start-btn">start</button>
+      <button id="m-start-btn">start</button>
     </div>
   </div>
 
-  <hr style="border:none; border-top:1px solid rgba(255,255,255,0.1); margin:2.5rem 0 1.5rem;">
+  <hr class="separator">
 
-  <div class="title" style="font-size:2rem;">
-    <span>umoja m. 23</span>
-  </div>
-  <p class="subtitle">&#9833; + &#9833;. + &#9833;. against 4/4</p>
+  <!-- === Umoja m. 23 === -->
+  <p class="ex-title">umoja m. 23</p>
+  <p class="ex-subtitle">&#9833; + &#9833;. + &#9833;. against 4/4</p>
 
-  <div class="beat-row">
-    <span class="beat-row-label">4/4</span>
-    <div class="beat layer4" id="u4-0"></div>
-    <div class="beat layer4" id="u4-1"></div>
-    <div class="beat layer4" id="u4-2"></div>
-    <div class="beat layer4" id="u4-3"></div>
-  </div>
-  <div class="beat-row">
-    <span class="beat-row-label">pat.</span>
-    <div class="beat layer3" id="u3-0"></div>
-    <div class="beat layer3" id="u3-1"></div>
-    <div class="beat layer3" id="u3-2"></div>
-  </div>
+  <div class="beat-track" id="u-track4"></div>
+  <div class="beat-track" id="u-track3"></div>
 
   <div class="controls">
     <div class="layer-config" id="u-config4"></div>
@@ -190,177 +161,14 @@
   </div>
 
   <script>
-    // --- Umoja m. 23 exercise ---
-    // Pattern: quarter (1 beat) + dotted quarter (1.5 beats) + dotted quarter (1.5 beats)
-    // Beat positions as fractions of measure: 0, 0.25, 0.625
-    const U_POS4 = [0, 0.25, 0.5, 0.75];
-    const U_POS3 = [0, 0.25, 0.625];
-
-    let u_bpm = 44;
-    let u_playing = false;
-    let u_startTime = 0;
-    let u_scheduled4 = 0;
-    let u_scheduled3 = 0;
-    let u_layer4Voice = 'low';
-    let u_layer3Voice = 'high';
-    let u_layer4Muted = false;
-    let u_layer3Muted = false;
-    let u_beatQueue = [];
-    let u_animFrame = null;
-    let u_dim4Timer = null;
-    let u_dim3Timer = null;
-
-    const u_startBtn = document.getElementById('u-start-btn');
-    const u_bpmSlider = document.getElementById('u-bpm');
-    const u_bpmDisplay = document.getElementById('u-bpm-display');
-
-    // Update worker to tick both exercises
-    function ensureWorker() {
-      if (!worker) {
-        worker = createWorker();
-        // Override handler to tick both
-        worker.onmessage = function() {
-          if (playing) scheduler();
-          if (u_playing) u_scheduler();
-        };
-      }
-    }
-
-    buildLayerConfig('u-config4', 'l4', 'low',
-      key => { u_layer4Voice = key; },
-      () => { u_layer4Muted = !u_layer4Muted; return u_layer4Muted; }
-    );
-    buildLayerConfig('u-config3', 'l3', 'high',
-      key => { u_layer3Voice = key; },
-      () => { u_layer3Muted = !u_layer3Muted; return u_layer3Muted; }
-    );
-
-    function u_highlightBeat(layer, index, count) {
-      for (let i = 0; i < count; i++) {
-        const el = document.getElementById('u' + layer + '-' + i);
-        if (i === index) el.classList.add('active');
-        else el.classList.remove('active');
-      }
-    }
-
-    function u_scheduler() {
-      const L = (60 / u_bpm) * 4;
-
-      while (true) {
-        const m = Math.floor(u_scheduled4 / 4);
-        const idx = u_scheduled4 % 4;
-        const t = u_startTime + m * L + U_POS4[idx] * L;
-        if (t >= audioCtx.currentTime + SCHEDULE_AHEAD) break;
-        if (!u_layer4Muted) playBuffer(u_layer4Voice, t, layer4Node);
-        u_beatQueue.push({ time: t, layer: 4, index: idx });
-        u_scheduled4++;
-      }
-
-      while (true) {
-        const m = Math.floor(u_scheduled3 / 3);
-        const idx = u_scheduled3 % 3;
-        const t = u_startTime + m * L + U_POS3[idx] * L;
-        if (t >= audioCtx.currentTime + SCHEDULE_AHEAD) break;
-        if (!u_layer3Muted) playBuffer(u_layer3Voice, t, layer3Node);
-        u_beatQueue.push({ time: t, layer: 3, index: idx });
-        u_scheduled3++;
-      }
-    }
-
-    function u_updateVisuals() {
-      if (!u_playing) return;
-      const now = audioCtx.currentTime;
-      const L = (60 / u_bpm) * 4;
-
-      let active4 = -1;
-      let active3 = -1;
-
-      while (u_beatQueue.length > 0 && u_beatQueue[0].time <= now) {
-        const b = u_beatQueue.shift();
-        if (b.layer === 4) active4 = b.index;
-        else active3 = b.index;
-      }
-
-      if (active4 >= 0) {
-        u_highlightBeat(4, active4, 4);
-        clearTimeout(u_dim4Timer);
-        u_dim4Timer = setTimeout(() => u_highlightBeat(4, -1, 4), (L / 4) * 400);
-      }
-      if (active3 >= 0) {
-        u_highlightBeat(3, active3, 3);
-        clearTimeout(u_dim3Timer);
-        const durations = [0.25, 0.375, 0.375];
-        u_dim3Timer = setTimeout(() => u_highlightBeat(3, -1, 3), durations[active3] * L * 400);
-      }
-
-      u_animFrame = requestAnimationFrame(u_updateVisuals);
-    }
-
-    function u_start() {
-      if (playing) stop();
-      if (!audioCtx) initAudio();
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-
-      u_scheduled4 = 0;
-      u_scheduled3 = 0;
-      u_beatQueue = [];
-      u_startTime = audioCtx.currentTime + 0.05;
-
-      ensureWorker();
-      worker.postMessage('start');
-      u_playing = true;
-      u_animFrame = requestAnimationFrame(u_updateVisuals);
-      u_startBtn.textContent = 'stop';
-    }
-
-    function u_stop() {
-      u_playing = false;
-      if (!playing && worker) worker.postMessage('stop');
-      cancelAnimationFrame(u_animFrame);
-      clearTimeout(u_dim4Timer);
-      clearTimeout(u_dim3Timer);
-      cancelScheduledBeats();
-      u_beatQueue = [];
-      u_startBtn.textContent = 'start';
-      u_highlightBeat(4, -1, 4);
-      u_highlightBeat(3, -1, 3);
-    }
-
-    u_startBtn.addEventListener('click', () => {
-      if (!u_playing) u_start();
-      else u_stop();
-    });
-
-    u_bpmSlider.addEventListener('input', () => {
-      u_bpmDisplay.textContent = parseInt(u_bpmSlider.value, 10);
-    });
-
-    u_bpmSlider.addEventListener('change', () => {
-      u_bpm = parseInt(u_bpmSlider.value, 10);
-      if (u_playing) {
-        cancelScheduledBeats();
-        u_beatQueue = [];
-        u_scheduled4 = 0;
-        u_scheduled3 = 0;
-        u_startTime = audioCtx.currentTime + 0.05;
-      }
-    });
-
-    // Override Mahler start/stop to be mutually exclusive
-    const _origStart = start;
-    start = function() {
-      if (u_playing) u_stop();
-      ensureWorker();
-      _origStart();
-    };
-  </script>
+    // === Shared audio infrastructure ===
     const voices = {
-      click:    { name: 'click',    wave: 'square',   freq: 800,  gain: 0.3, decay: 0.05 },
-      high:     { name: 'high',     wave: 'square',   freq: 1400, gain: 0.25, decay: 0.04 },
-      bell:     { name: 'bell',     wave: 'sine',     freq: 523,  gain: 0.4, decay: 0.3 },
-      low:      { name: 'low',      wave: 'sine',     freq: 262,  gain: 0.4, decay: 0.2 },
-      snap:     { name: 'snap',     wave: 'triangle', freq: 2000, gain: 0.25, decay: 0.03 },
-      drum:     { name: 'drum',     wave: 'square',   freq: 200,  gain: 0.4, decay: 0.08 }
+      click: { name: 'click', wave: 'square', freq: 800, gain: 0.3, decay: 0.05 },
+      high:  { name: 'high',  wave: 'square', freq: 1400, gain: 0.25, decay: 0.04 },
+      bell:  { name: 'bell',  wave: 'sine',   freq: 523, gain: 0.4, decay: 0.3 },
+      low:   { name: 'low',   wave: 'sine',   freq: 262, gain: 0.4, decay: 0.2 },
+      snap:  { name: 'snap',  wave: 'triangle', freq: 2000, gain: 0.25, decay: 0.03 },
+      drum:  { name: 'drum',  wave: 'square', freq: 200, gain: 0.4, decay: 0.08 }
     };
 
     let audioCtx = null;
@@ -368,49 +176,9 @@
     let layer3Node = null;
     let previewNode = null;
     let buffers = {};
-    let playing = false;
-    let bpm = 80;
     let worker = null;
-    let animFrame = null;
-    let layer4Voice = 'low';
-    let layer3Voice = 'high';
-    let layer4Muted = false;
-    let layer3Muted = false;
-
-    let nextBeat4Time = 0;
-    let nextBeat3Time = 0;
-    let currentBeat4 = 0;
-    let currentBeat3 = 0;
-
-    // Visual event queue: [{time, layer, index}]
-    let beatQueue = [];
-
-    // Track scheduled source nodes so we can cancel them on tempo change
     let scheduledSources = [];
-
     const SCHEDULE_AHEAD = 0.12;
-
-    const startBtn = document.getElementById('start-btn');
-    const bpmSlider = document.getElementById('bpm');
-    const bpmDisplay = document.getElementById('bpm-display');
-
-    // Web Worker ticker via inline Blob
-    function createWorker() {
-      const blob = new Blob([`
-        let interval = null;
-        self.onmessage = function(e) {
-          if (e.data === 'start') {
-            interval = setInterval(function() { postMessage('tick'); }, 25);
-          } else if (e.data === 'stop') {
-            clearInterval(interval);
-            interval = null;
-          }
-        };
-      `], { type: 'application/javascript' });
-      const w = new Worker(URL.createObjectURL(blob));
-      w.onmessage = function() { if (playing) scheduler(); };
-      return w;
-    }
 
     function renderBuffer(voice) {
       const sr = audioCtx.sampleRate;
@@ -424,9 +192,7 @@
         if (voice.wave === 'sine') sample = Math.sin(phase);
         else if (voice.wave === 'square') sample = Math.sin(phase) >= 0 ? 1 : -1;
         else sample = 2 * Math.abs(2 * (t * voice.freq % 1) - 1) - 1;
-        const env = t < voice.decay
-          ? voice.gain * Math.pow(0.001 / voice.gain, t / voice.decay)
-          : 0;
+        const env = t < voice.decay ? voice.gain * Math.pow(0.001 / voice.gain, t / voice.decay) : 0;
         data[i] = sample * env;
       }
       return buf;
@@ -434,26 +200,20 @@
 
     function initAudio() {
       audioCtx = new AudioContext();
-
       layer4Node = audioCtx.createGain();
       layer4Node.gain.value = 0.5;
       layer4Node.connect(audioCtx.destination);
-
       layer3Node = audioCtx.createGain();
       layer3Node.gain.value = 0.5;
       layer3Node.connect(audioCtx.destination);
-
       previewNode = audioCtx.createGain();
       previewNode.gain.value = 0.5;
       previewNode.connect(audioCtx.destination);
-
-      Object.keys(voices).forEach(key => {
-        buffers[key] = renderBuffer(voices[key]);
-      });
-
+      Object.keys(voices).forEach(k => { buffers[k] = renderBuffer(voices[k]); });
       audioCtx.onstatechange = () => {
         if (audioCtx.state === 'interrupted' || audioCtx.state === 'suspended') {
-          if (playing) stop();
+          if (m.playing) m_stop();
+          if (u.playing) u_stop();
         }
       };
     }
@@ -470,29 +230,54 @@
       };
     }
 
-    function cancelScheduledBeats() {
+    function cancelScheduled() {
       scheduledSources.forEach(s => { try { s.stop(); } catch (e) {} });
       scheduledSources = [];
-      beatQueue = [];
     }
 
-    function resyncMeasure() {
-      cancelScheduledBeats();
-      const startTime = audioCtx.currentTime + 0.05;
-      nextBeat4Time = startTime;
-      nextBeat3Time = startTime;
-      currentBeat4 = 0;
-      currentBeat3 = 0;
+    function createWorker() {
+      const blob = new Blob([`
+        let iv = null;
+        self.onmessage = function(e) {
+          if (e.data === 'start' && !iv) iv = setInterval(function() { postMessage('tick'); }, 25);
+          else if (e.data === 'stop') { clearInterval(iv); iv = null; }
+        };
+      `], { type: 'application/javascript' });
+      return new Worker(URL.createObjectURL(blob));
+    }
+
+    function ensureWorker() {
+      if (!worker) {
+        worker = createWorker();
+        worker.onmessage = () => {
+          if (m.playing) m_scheduler();
+          if (u.playing) u_scheduler();
+        };
+      }
+    }
+
+    // Build dots positioned by time fraction
+    function buildDots(trackId, positions, layerClass, idPrefix) {
+      const track = document.getElementById(trackId);
+      const label = document.createElement('span');
+      label.className = 'beat-track-label ' + layerClass;
+      label.textContent = layerClass === 'l4' ? '4/4' : 'pat.';
+      track.appendChild(label);
+      positions.forEach((pos, i) => {
+        const dot = document.createElement('div');
+        dot.className = 'dot ' + layerClass;
+        dot.id = idPrefix + i;
+        dot.style.left = (pos * 100) + '%';
+        track.appendChild(dot);
+      });
     }
 
     function buildLayerConfig(containerId, labelClass, defaultKey, onSelect, onMute) {
       const container = document.getElementById(containerId);
-
       const label = document.createElement('span');
       label.className = 'layer-config-label ' + labelClass;
       label.textContent = labelClass === 'l4' ? '4' : '3';
       container.appendChild(label);
-
       const btns = {};
       Object.keys(voices).forEach(key => {
         const btn = document.createElement('button');
@@ -509,7 +294,6 @@
         btns[key] = btn;
         container.appendChild(btn);
       });
-
       const muteBtn = document.createElement('button');
       muteBtn.className = 'mute-btn';
       muteBtn.textContent = 'mute';
@@ -520,119 +304,164 @@
       container.appendChild(muteBtn);
     }
 
-    buildLayerConfig('config4', 'l4', 'low',
-      key => { layer4Voice = key; },
-      () => { layer4Muted = !layer4Muted; return layer4Muted; }
-    );
-    buildLayerConfig('config3', 'l3', 'high',
-      key => { layer3Voice = key; },
-      () => { layer3Muted = !layer3Muted; return layer3Muted; }
-    );
-
-    function highlightBeat(layer, index, count) {
+    function highlightDot(idPrefix, index, count) {
       for (let i = 0; i < count; i++) {
-        const el = document.getElementById('b' + layer + '-' + i);
+        const el = document.getElementById(idPrefix + i);
         if (i === index) el.classList.add('active');
         else el.classList.remove('active');
       }
     }
 
-    function scheduler() {
-      const L = (60 / bpm) * 4;
-      const beat4Interval = L / 4;
-      const beat3Interval = L / 3;
+    // === Mahler 3-against-4 ===
+    const M_POS4 = [0, 0.25, 0.5, 0.75];
+    const M_POS3 = [0, 1/3, 2/3];
 
-      while (nextBeat4Time < audioCtx.currentTime + SCHEDULE_AHEAD) {
-        if (!layer4Muted) playBuffer(layer4Voice, nextBeat4Time, layer4Node);
-        beatQueue.push({ time: nextBeat4Time, layer: 4, index: currentBeat4 });
-        currentBeat4 = (currentBeat4 + 1) % 4;
-        nextBeat4Time += beat4Interval;
+    buildDots('m-track4', M_POS4, 'l4', 'm4-');
+    buildDots('m-track3', M_POS3, 'l3', 'm3-');
+
+    const m = { playing: false, bpm: 80, v4: 'low', v3: 'high', m4: false, m3: false };
+    let m_s4 = 0, m_s3 = 0, m_startTime = 0, m_beatQueue = [], m_animFrame = null, m_d4 = null, m_d3 = null;
+
+    buildLayerConfig('m-config4', 'l4', 'low',  k => { m.v4 = k; }, () => { m.m4 = !m.m4; return m.m4; });
+    buildLayerConfig('m-config3', 'l3', 'high', k => { m.v3 = k; }, () => { m.m3 = !m.m3; return m.m3; });
+
+    function m_scheduler() {
+      const L = (60 / m.bpm) * 4;
+      while (true) {
+        const mi = Math.floor(m_s4 / 4), idx = m_s4 % 4;
+        const t = m_startTime + mi * L + M_POS4[idx] * L;
+        if (t >= audioCtx.currentTime + SCHEDULE_AHEAD) break;
+        if (!m.m4) playBuffer(m.v4, t, layer4Node);
+        m_beatQueue.push({ time: t, layer: 4, index: idx });
+        m_s4++;
       }
-
-      while (nextBeat3Time < audioCtx.currentTime + SCHEDULE_AHEAD) {
-        if (!layer3Muted) playBuffer(layer3Voice, nextBeat3Time, layer3Node);
-        beatQueue.push({ time: nextBeat3Time, layer: 3, index: currentBeat3 });
-        currentBeat3 = (currentBeat3 + 1) % 3;
-        nextBeat3Time += beat3Interval;
+      while (true) {
+        const mi = Math.floor(m_s3 / 3), idx = m_s3 % 3;
+        const t = m_startTime + mi * L + M_POS3[idx] * L;
+        if (t >= audioCtx.currentTime + SCHEDULE_AHEAD) break;
+        if (!m.m3) playBuffer(m.v3, t, layer3Node);
+        m_beatQueue.push({ time: t, layer: 3, index: idx });
+        m_s3++;
       }
     }
 
-    function updateVisuals() {
-      if (!playing) return;
+    function m_visuals() {
+      if (!m.playing) return;
       const now = audioCtx.currentTime;
-      const beat4Interval = (60 / bpm);
-      const beat3Interval = (60 / bpm) * 4 / 3;
-
-      let active4 = -1;
-      let active3 = -1;
-
-      // Consume queue: activate beats whose time has arrived
-      while (beatQueue.length > 0 && beatQueue[0].time <= now) {
-        const b = beatQueue.shift();
-        if (b.layer === 4) active4 = b.index;
-        else active3 = b.index;
+      const L = (60 / m.bpm) * 4;
+      let a4 = -1, a3 = -1;
+      while (m_beatQueue.length && m_beatQueue[0].time <= now) {
+        const b = m_beatQueue.shift();
+        if (b.layer === 4) a4 = b.index; else a3 = b.index;
       }
-
-      // Peek ahead for beats not yet arrived — keep previous highlight
-      // (only update if we consumed something this frame)
-      if (active4 >= 0) {
-        highlightBeat(4, active4, 4);
-        clearTimeout(dim4Timer);
-        dim4Timer = setTimeout(() => highlightBeat(4, -1, 4), beat4Interval * 400);
-      }
-      if (active3 >= 0) {
-        highlightBeat(3, active3, 3);
-        clearTimeout(dim3Timer);
-        dim3Timer = setTimeout(() => highlightBeat(3, -1, 3), beat3Interval * 400);
-      }
-
-      animFrame = requestAnimationFrame(updateVisuals);
+      if (a4 >= 0) { highlightDot('m4-', a4, 4); clearTimeout(m_d4); m_d4 = setTimeout(() => highlightDot('m4-', -1, 4), (L/4)*400); }
+      if (a3 >= 0) { highlightDot('m3-', a3, 3); clearTimeout(m_d3); m_d3 = setTimeout(() => highlightDot('m3-', -1, 3), (L/3)*400); }
+      m_animFrame = requestAnimationFrame(m_visuals);
     }
 
-    let dim4Timer = null;
-    let dim3Timer = null;
-
-    function start() {
+    function m_start() {
+      if (u.playing) u_stop();
       if (!audioCtx) initAudio();
       if (audioCtx.state === 'suspended') audioCtx.resume();
-
-      currentBeat4 = 0;
-      currentBeat3 = 0;
-      beatQueue = [];
-      nextBeat4Time = audioCtx.currentTime + 0.05;
-      nextBeat3Time = audioCtx.currentTime + 0.05;
-
-      if (!worker) worker = createWorker();
-      worker.postMessage('start');
-      playing = true;
-      animFrame = requestAnimationFrame(updateVisuals);
-      startBtn.textContent = 'stop';
+      m_s4 = 0; m_s3 = 0; m_beatQueue = [];
+      m_startTime = audioCtx.currentTime + 0.05;
+      ensureWorker(); worker.postMessage('start');
+      m.playing = true;
+      m_animFrame = requestAnimationFrame(m_visuals);
+      document.getElementById('m-start-btn').textContent = 'stop';
     }
 
-    function stop() {
-      playing = false;
-      if (worker) worker.postMessage('stop');
-      cancelAnimationFrame(animFrame);
-      clearTimeout(dim4Timer);
-      clearTimeout(dim3Timer);
-      beatQueue = [];
-      startBtn.textContent = 'start';
-      highlightBeat(4, -1, 4);
-      highlightBeat(3, -1, 3);
+    function m_stop() {
+      m.playing = false;
+      if (!u.playing && worker) worker.postMessage('stop');
+      cancelAnimationFrame(m_animFrame);
+      clearTimeout(m_d4); clearTimeout(m_d3);
+      cancelScheduled(); m_beatQueue = [];
+      document.getElementById('m-start-btn').textContent = 'start';
+      highlightDot('m4-', -1, 4); highlightDot('m3-', -1, 3);
     }
 
-    startBtn.addEventListener('click', () => {
-      if (!playing) start();
-      else stop();
+    document.getElementById('m-start-btn').addEventListener('click', () => { if (!m.playing) m_start(); else m_stop(); });
+    document.getElementById('m-bpm').addEventListener('input', () => { document.getElementById('m-bpm-display').textContent = parseInt(document.getElementById('m-bpm').value, 10); });
+    document.getElementById('m-bpm').addEventListener('change', () => {
+      m.bpm = parseInt(document.getElementById('m-bpm').value, 10);
+      if (m.playing) { cancelScheduled(); m_beatQueue = []; m_s4 = 0; m_s3 = 0; m_startTime = audioCtx.currentTime + 0.05; }
     });
 
-    bpmSlider.addEventListener('input', () => {
-      bpmDisplay.textContent = parseInt(bpmSlider.value, 10);
-    });
+    // === Umoja m. 23 ===
+    const U_POS4 = [0, 0.25, 0.5, 0.75];
+    const U_POS3 = [0, 0.25, 0.625];
 
-    bpmSlider.addEventListener('change', () => {
-      bpm = parseInt(bpmSlider.value, 10);
-      if (playing) resyncMeasure();
+    buildDots('u-track4', U_POS4, 'l4', 'u4-');
+    buildDots('u-track3', U_POS3, 'l3', 'u3-');
+
+    const u = { playing: false, bpm: 44, v4: 'low', v3: 'high', m4: false, m3: false };
+    let u_s4 = 0, u_s3 = 0, u_startTime = 0, u_beatQueue = [], u_animFrame = null, u_d4 = null, u_d3 = null;
+
+    buildLayerConfig('u-config4', 'l4', 'low',  k => { u.v4 = k; }, () => { u.m4 = !u.m4; return u.m4; });
+    buildLayerConfig('u-config3', 'l3', 'high', k => { u.v3 = k; }, () => { u.m3 = !u.m3; return u.m3; });
+
+    function u_scheduler() {
+      const L = (60 / u.bpm) * 4;
+      while (true) {
+        const mi = Math.floor(u_s4 / 4), idx = u_s4 % 4;
+        const t = u_startTime + mi * L + U_POS4[idx] * L;
+        if (t >= audioCtx.currentTime + SCHEDULE_AHEAD) break;
+        if (!u.m4) playBuffer(u.v4, t, layer4Node);
+        u_beatQueue.push({ time: t, layer: 4, index: idx });
+        u_s4++;
+      }
+      while (true) {
+        const mi = Math.floor(u_s3 / 3), idx = u_s3 % 3;
+        const t = u_startTime + mi * L + U_POS3[idx] * L;
+        if (t >= audioCtx.currentTime + SCHEDULE_AHEAD) break;
+        if (!u.m3) playBuffer(u.v3, t, layer3Node);
+        u_beatQueue.push({ time: t, layer: 3, index: idx });
+        u_s3++;
+      }
+    }
+
+    function u_visuals() {
+      if (!u.playing) return;
+      const now = audioCtx.currentTime;
+      const L = (60 / u.bpm) * 4;
+      let a4 = -1, a3 = -1;
+      while (u_beatQueue.length && u_beatQueue[0].time <= now) {
+        const b = u_beatQueue.shift();
+        if (b.layer === 4) a4 = b.index; else a3 = b.index;
+      }
+      if (a4 >= 0) { highlightDot('u4-', a4, 4); clearTimeout(u_d4); u_d4 = setTimeout(() => highlightDot('u4-', -1, 4), (L/4)*400); }
+      if (a3 >= 0) { highlightDot('u3-', a3, 3); clearTimeout(u_d3); u_d3 = setTimeout(() => highlightDot('u3-', -1, 3), (L*0.375)*400); }
+      u_animFrame = requestAnimationFrame(u_visuals);
+    }
+
+    function u_start() {
+      if (m.playing) m_stop();
+      if (!audioCtx) initAudio();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      u_s4 = 0; u_s3 = 0; u_beatQueue = [];
+      u_startTime = audioCtx.currentTime + 0.05;
+      ensureWorker(); worker.postMessage('start');
+      u.playing = true;
+      u_animFrame = requestAnimationFrame(u_visuals);
+      document.getElementById('u-start-btn').textContent = 'stop';
+    }
+
+    function u_stop() {
+      u.playing = false;
+      if (!m.playing && worker) worker.postMessage('stop');
+      cancelAnimationFrame(u_animFrame);
+      clearTimeout(u_d4); clearTimeout(u_d3);
+      cancelScheduled(); u_beatQueue = [];
+      document.getElementById('u-start-btn').textContent = 'start';
+      highlightDot('u4-', -1, 4); highlightDot('u3-', -1, 3);
+    }
+
+    document.getElementById('u-start-btn').addEventListener('click', () => { if (!u.playing) u_start(); else u_stop(); });
+    document.getElementById('u-bpm').addEventListener('input', () => { document.getElementById('u-bpm-display').textContent = parseInt(document.getElementById('u-bpm').value, 10); });
+    document.getElementById('u-bpm').addEventListener('change', () => {
+      u.bpm = parseInt(document.getElementById('u-bpm').value, 10);
+      if (u.playing) { cancelScheduled(); u_beatQueue = []; u_s4 = 0; u_s3 = 0; u_startTime = audioCtx.currentTime + 0.05; }
     });
   </script>
 </body>
