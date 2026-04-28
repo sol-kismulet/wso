@@ -269,8 +269,8 @@
       filter.Q.value = 0.7;
 
       env.gain.setValueAtTime(0, startTime);
-      env.gain.linearRampToValueAtTime(0.35, startTime + attack);
-      env.gain.setValueAtTime(0.35, startTime + dur - release);
+      env.gain.linearRampToValueAtTime(0.7, startTime + attack);
+      env.gain.setValueAtTime(0.7, startTime + dur - release);
       env.gain.linearRampToValueAtTime(0, startTime + dur);
 
       osc1.connect(filter);
@@ -326,16 +326,15 @@
       });
     }
 
-    const allVoiceKeys = Object.keys(voices).concat(['cello']);
-
-    function buildLayerConfig(containerId, labelClass, defaultKey, onSelect, onMute) {
+    function buildLayerConfig(containerId, labelClass, defaultKey, onSelect, onMute, extraVoices) {
       const container = document.getElementById(containerId);
       const label = document.createElement('span');
       label.className = 'layer-config-label ' + labelClass;
       label.textContent = labelClass === 'l4' ? '4' : '3';
       container.appendChild(label);
+      const keys = Object.keys(voices).concat(extraVoices || []);
       const btns = {};
-      allVoiceKeys.forEach(key => {
+      keys.forEach(key => {
         const btn = document.createElement('button');
         btn.className = 'sound-btn' + (key === defaultKey ? ' active' : '');
         btn.textContent = key === 'cello' ? 'cello' : voices[key].name;
@@ -345,7 +344,7 @@
           onSelect(key);
           if (!audioCtx) initAudio();
           if (audioCtx.state === 'suspended') audioCtx.resume();
-          if (key === 'cello') playCello(0, audioCtx.currentTime, 2.0, previewNode);
+          if (key === 'cello') playCello(0, audioCtx.currentTime, 4.0, previewNode);
           else playBuffer(key, audioCtx.currentTime, previewNode);
         });
         btns[key] = btn;
@@ -456,7 +455,7 @@
     let u_s4 = 0, u_s3 = 0, u_startTime = 0, u_beatQueue = [], u_animFrame = null, u_d4 = null, u_d3 = null;
 
     buildLayerConfig('u-config4', 'l4', 'low',  k => { u.v4 = k; }, () => { u.m4 = !u.m4; return u.m4; });
-    buildLayerConfig('u-config3', 'l3', 'cello', k => { u.v3 = k; }, () => { u.m3 = !u.m3; return u.m3; });
+    buildLayerConfig('u-config3', 'l3', 'cello', k => { u.v3 = k; }, () => { u.m3 = !u.m3; return u.m3; }, ['cello']);
 
     function u_scheduler() {
       const L = (60 / u.bpm) * 4;
